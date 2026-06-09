@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'سياسة الشحن' if session.get('lang', 'ar') == 'ar' else 'Shipping Policy' }} | ORYA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .policy-hero {
+        padding: 80px 0;
+        background: var(--bg-soft);
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+    }
+    .policy-hero h1 {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        color: var(--text-dark);
+        margin: 0;
+    }
+    .policy-body {
+        padding: 60px 0;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .policy-content {
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        line-height: 1.8;
+        color: var(--text-main);
+    }
+    .policy-content h2 {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        color: var(--gold);
+        border-bottom: 1px solid var(--bg-soft);
+        padding-bottom: 10px;
+    }
+    .policy-content ul {
+        padding-inline-start: 20px;
+        margin-bottom: 20px;
+    }
+    .policy-content li {
+        margin-bottom: 10px;
+    }
+    [dir="rtl"] .policy-content {
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="policy-hero">
+    <div class="container">
+        <h1 data-i18n="shipping_policy">Shipping Policy</h1>
+    </div>
+</section>
+
+<section class="policy-body">
+    <div class="container">
+        <div class="policy-content">
+            {% if session.get('lang', 'ar') == 'ar' %}
+                <h2>سياسة الشحن والتوصيل</h2>
+                <p>يسعدنا توصيل بريق أوريا إلى باب منزلكِ داخل المملكة الأردنية الهاشمية:</p>
+                <ul>
+                    <li><strong>مناطق التوصيل:</strong> نشحن إلى كافة محافظات الأردن (عمان، إربد، الزرقاء، العقبة، المفرق، جرش، الكرك، وغيرها).</li>
+                    <li><strong>وقت التوصيل:</strong> يستغرق التوصيل ما بين 48 إلى 72 ساعة عمل.</li>
+                    <li><strong>رسوم الشحن:</strong> رسوم التوصيل ثابتة هي 3 دنانير أردنية (JOD) لجميع الطلبات.</li>
+                    <li><strong>معاينة المنتج:</strong> يمكنكِ معاينة القطع قبل الاستلام، وفي حال لم تنل إعجابكِ، يتم دفع رسوم التوصيل فقط.</li>
+                    <li><strong>الشحن الدولي:</strong> حالياً، لا يتوفر شحن خارج الأردن.</li>
+                </ul>
+            {% else %}
+                <h2>Shipping & Delivery Policy</h2>
+                <p>We are happy to deliver ORYA's sparkle to your doorstep across the Hashemite Kingdom of Jordan:</p>
+                <ul>
+                    <li><strong>Delivery Areas:</strong> We ship to all governorates in Jordan (Amman, Irbid, Zarqa, Aqaba, Mafraq, Jerash, Karak, and more).</li>
+                    <li><strong>Delivery Time:</strong> Delivery takes between 48 to 72 business hours.</li>
+                    <li><strong>Shipping Fees:</strong> A flat shipping rate of 3 Jordanian Dinars (JOD) applies to all orders.</li>
+                    <li><strong>Inspection:</strong> You can inspect the pieces before receipt. If they do not meet your expectations, you only pay the delivery fee.</li>
+                    <li><strong>International Shipping:</strong> Currently, we do not offer shipping outside of Jordan.</li>
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

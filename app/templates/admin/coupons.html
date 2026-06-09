@@ -1,0 +1,246 @@
+{% extends "admin/base_admin.html" %}
+{% set active = 'coupons' %}
+
+{% block title %}<span data-i18n="admin_coupons">الكوبونات</span> — ORYA Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title" data-i18n="admin_coupons_title">إدارة الكوبونات</h1>
+    <p class="page-subtitle" id="coupons-summary" data-i18n="admin_coupons_subtitle">إنشاء وإدارة أكواد الخصم الترويجية</p>
+  </div>
+  <button class="btn btn-gold" onclick="openCouponModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    <span data-i18n="add_new_coupon">إنشاء كوبون جديد</span>
+  </button>
+</div>
+
+<!-- COUPONS TABLE -->
+<div class="table-card">
+  <div id="coupons-table-wrap" style="min-height: 200px;">
+    <div class="loading-row"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- COUPON MODAL FORM -->
+<div class="modal-overlay" id="coupon-modal">
+  <div class="modal-box" style="max-width: 500px;">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title" data-i18n="add_new_coupon">إنشاء كوبون</span>
+      <button class="modal-close" data-modal-close="coupon-modal">✕</button>
+    </div>
+    <form id="coupon-form" style="padding: 24px;">
+      <input type="hidden" id="coupon-id" name="id">
+      
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label"><span data-i18n="coupon_code_label">كود الخصم</span> <span class="required">*</span></label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" class="form-input" id="coupon-code" name="code" required 
+                 style="text-transform: uppercase; letter-spacing: 1px;" dir="ltr">
+          <button type="button" class="btn btn-outline btn-sm" onclick="generateCode()" style="white-space: nowrap;" data-i18n="generate_auto">توليد تلقائي</button>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label" data-i18n="discount_type">نوع الخصم</label>
+        <div style="display: flex; gap: 40px; margin-top: 8px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+            <input type="radio" name="type" value="percentage" checked> <span data-i18n="percentage_type">نسبة مئوية (%)</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+            <input type="radio" name="type" value="fixed"> <span data-i18n="fixed_type">مبلغ ثابت (JOD)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><span data-i18n="discount_value">قيمة الخصم</span> <span class="required">*</span></label>
+          <input type="number" step="0.01" class="form-input" id="coupon-value" name="value" required placeholder="مثال: 10">
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="min_order">الحد الأدنى للطلب (JOD)</label>
+          <input type="number" step="0.001" class="form-input" id="coupon-min" name="min_order_jod" placeholder="0.000">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" data-i18n="usage_limit">عدد مرات الاستخدام</label>
+          <input type="number" class="form-input" id="coupon-limit" name="usage_limit" data-i18n-placeholder="unlimited" placeholder="غير محدود">
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="expiry_date">تاريخ الانتهاء</label>
+          <input type="date" class="form-input" id="coupon-expiry" name="expires_at">
+        </div>
+      </div>
+
+      <div class="toggle-group" style="margin-top: 10px; margin-bottom: 20px;">
+        <span class="toggle-label" data-i18n="activate_now">تفعيل الكوبون الآن</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="coupon-is-active" name="is_active" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="modal-footer" style="padding: 0; border: none; margin-top: 24px;">
+        <button type="button" class="btn btn-outline" data-modal-close="coupon-modal" data-i18n="cancel">إلغاء</button>
+        <button type="submit" class="btn btn-gold" id="save-coupon-btn" data-i18n="save_coupon">حفظ الكوبون</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadCoupons() {
+  const wrap = document.getElementById('coupons-table-wrap');
+  wrap.innerHTML = '<div class="loading-row"><div class="spinner"></div></div>';
+
+  try {
+    const data = await Admin.adminFetch('/admin/api/coupons');
+    const coupons = data.coupons || [];
+    
+    document.getElementById('coupons-summary').innerHTML = `${t('admin_coupons_subtitle')} (${coupons.length} ${t('total_coupons_text')})`;
+
+    if (coupons.length === 0) {
+      wrap.innerHTML = `<div class="table-empty" data-i18n="no_coupons_found">${t('no_coupons_found')}</div>`;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th data-i18n="table_code">${t('table_code')}</th>
+            <th data-i18n="table_type">${t('table_type')}</th>
+            <th data-i18n="table_value">${t('table_value')}</th>
+            <th data-i18n="table_min">${t('table_min')}</th>
+            <th data-i18n="table_usage">${t('table_usage')}</th>
+            <th data-i18n="table_expiry">${t('table_expiry')}</th>
+            <th data-i18n="table_active">${t('table_active')}</th>
+            <th data-i18n="table_actions">${t('table_actions')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${coupons.map(c => `
+            <tr>
+              <td><span style="font-family: monospace; font-weight: 700; letter-spacing: 1px; color: var(--charcoal);">${c.code}</span></td>
+              <td>${c.type === 'percentage' ? t('percentage_type') : t('fixed_type')}</td>
+              <td><strong style="color: var(--gold);">${c.type === 'percentage' ? c.value + '%' : parseFloat(c.value).toFixed(3) + ' JOD'}</strong></td>
+              <td>${parseFloat(c.min_order_jod || 0).toFixed(3)} JOD</td>
+              <td>${c.used_count || 0}${c.usage_limit ? ' / ' + c.usage_limit : ' / ∞'}</td>
+              <td>${c.expires_at ? new Date(c.expires_at).toLocaleDateString(currentLang === 'ar' ? 'ar-JO' : 'en-US') : '—'}</td>
+              <td>
+                <button class="btn-icon ${c.is_active ? 'primary' : ''}" onclick="toggleCoupon(${c.id}, ${!c.is_active})" title="${c.is_active ? 'تعطيل' : 'تفعيل'}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    ${c.is_active ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/>'}
+                  </svg>
+                </button>
+              </td>
+              <td>
+                <div class="table-actions">
+                  <button class="btn-icon primary" onclick='editCoupon(${JSON.stringify(c)})' data-i18n-title="edit_text">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button class="btn-icon danger" onclick="deleteCoupon(${c.id})" data-i18n-title="table_delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+  } catch (e) {
+    console.error('Coupons load error:', e);
+    Admin.showToast(t('error_loading_coupons') || 'Error loading coupons', 'error');
+  }
+}
+
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'ORYA-';
+  for (let i = 0; i < 5; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  document.getElementById('coupon-code').value = code;
+}
+
+function openCouponModal() {
+  document.getElementById('modal-title').textContent = t('add_new_coupon');
+  document.getElementById('coupon-id').value = '';
+  document.getElementById('coupon-form').reset();
+  Admin.openModal('coupon-modal');
+}
+
+function editCoupon(c) {
+  document.getElementById('modal-title').textContent = t('edit_coupon_title');
+  document.getElementById('coupon-id').value = c.id;
+  document.getElementById('coupon-code').value = c.code;
+  document.querySelector(`input[name="type"][value="${c.type}"]`).checked = true;
+  document.getElementById('coupon-value').value = c.value;
+  document.getElementById('coupon-min').value = c.min_order_jod || '';
+  document.getElementById('coupon-limit').value = c.usage_limit || '';
+  document.getElementById('coupon-expiry').value = c.expires_at ? c.expires_at.split('T')[0] : '';
+  document.getElementById('coupon-is-active').checked = c.is_active;
+  Admin.openModal('coupon-modal');
+}
+
+document.getElementById('coupon-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('coupon-id').value;
+  const payload = {
+    code: document.getElementById('coupon-code').value.toUpperCase(),
+    type: document.querySelector('input[name="type"]:checked').value,
+    value: parseFloat(document.getElementById('coupon-value').value),
+    min_order_jod: parseFloat(document.getElementById('coupon-min').value) || 0,
+    usage_limit: parseInt(document.getElementById('coupon-limit').value) || null,
+    expires_at: document.getElementById('coupon-expiry').value || null,
+    is_active: document.getElementById('coupon-is-active').checked
+  };
+
+  try {
+    const url = id ? `/admin/api/coupons/${id}` : '/admin/api/coupons';
+    await Admin.adminFetch(url, { method: id ? 'PUT' : 'POST', body: payload });
+    Admin.showToast(t('coupon_saved_success') || 'Saved successfully', 'success');
+    Admin.closeModal('coupon-modal');
+    loadCoupons();
+  } catch (e) { Admin.showToast(e.message, 'error'); }
+};
+
+async function toggleCoupon(id, status) {
+  try {
+    await Admin.adminFetch(`/admin/api/coupons/${id}`, { method: 'PUT', body: { is_active: status } });
+    Admin.showToast(t('coupon_status_updated') || 'Status updated', 'success');
+    loadCoupons();
+  } catch (e) { Admin.showToast(e.message, 'error'); }
+}
+
+async function deleteCoupon(id) {
+  Admin.showConfirm(t('confirm_delete_coupon') || 'Delete this coupon?', async () => {
+    try {
+      await Admin.adminFetch(`/admin/api/coupons/${id}`, { method: 'DELETE' });
+      Admin.showToast(t('coupon_deleted_success') || 'Deleted successfully', 'success');
+      loadCoupons();
+    } catch (e) { Admin.showToast(e.message, 'error'); }
+  }, t('table_actions'), true);
+}
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => loadCoupons());
+
+// Refresh on language change
+window.addEventListener('languageChanged', () => {
+  loadCoupons();
+});
+</script>
+{% endblock %}

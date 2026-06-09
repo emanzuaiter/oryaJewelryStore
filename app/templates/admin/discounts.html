@@ -1,0 +1,314 @@
+{% extends "admin/base_admin.html" %}
+{% set active = 'discounts' %}
+
+{% block title %}التخفيضات والعروض — ORYA Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title" data-i18n="admin_discounts">إدارة التخفيضات</h1>
+    <p class="page-subtitle" data-i18n="admin_discounts_subtitle">تطبيق خصومات على منتجات محددة أو فئات كاملة</p>
+  </div>
+</div>
+
+<div class="two-col-layout" style="grid-template-columns: 1fr 1fr; align-items: stretch;">
+  
+  <!-- SECTION A — Per-Product Sale -->
+  <div class="form-section" style="display: flex; flex-direction: column; margin-bottom: 0;">
+    <h3 class="form-section-title" data-i18n="product_discount_title">أ. تخفيض منتج محدد</h3>
+    <div class="form-group" style="position: relative;">
+      <label class="form-label" data-i18n="search_product">البحث عن المنتج</label>
+      <div class="search-wrap" style="margin-bottom: 0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" class="search-input" id="product-search" 
+               data-i18n-placeholder="type_product_name" placeholder="اكتب اسم المنتج..." oninput="onProductSearch()">
+      </div>
+      <div id="product-dropdown" class="dropdown-list"></div>
+      <input type="hidden" id="selected-product-id">
+    </div>
+
+    <div class="form-group" style="margin-top: 16px;">
+      <label class="form-label" data-i18n="new_sale_price">سعر التخفيض الجديد (JOD)</label>
+      <input type="number" step="0.001" class="form-input" id="sale-price" placeholder="0.000">
+    </div>
+
+    <div style="display: flex; gap: 12px; margin-top: auto; padding-top: 24px;">
+      <button class="btn btn-gold" style="flex: 1;" onclick="applyProductSale()" data-i18n="apply_price">تطبيق السعر</button>
+      <button class="btn btn-outline" style="color: var(--error); border-color: var(--error);" onclick="removeProductSale()" data-i18n="remove_sale">إزالة التخفيض</button>
+    </div>
+  </div>
+
+  <!-- SECTION B — Category Bulk Discount -->
+  <div class="form-section" style="display: flex; flex-direction: column; margin-bottom: 0;">
+    <h3 class="form-section-title" data-i18n="category_bulk_discount_title">ب. تخفيض فئة كاملة (Bulk)</h3>
+    <div class="form-group">
+      <label class="form-label" data-i18n="category_label">الفئة</label>
+      <select class="form-select" id="category-select" onchange="previewCategoryBulk()">
+        <option value="" data-i18n="select_category">اختر الفئة...</option>
+        {% for val, lbl in [('necklaces','قلائد'), ('earrings','أقراط'), ('bracelets','أساور'), ('rings','خواتم'), ('belly-rings','بيرسينج بطن'), ('anklets','خلاخيل'), ('sets','أطقم')] %}
+        <option value="{{ val }}">{{ lbl }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group" style="margin-top: 16px;">
+      <label class="form-label" data-i18n="discount_percentage">نسبة الخصم (%)</label>
+      <input type="number" min="1" max="90" class="form-input" id="bulk-percent" 
+             placeholder="مثال: 20" oninput="previewCategoryBulk()">
+    </div>
+
+    <div id="bulk-preview" class="bulk-preview-box" data-i18n="select_category_to_preview">
+      اختر فئة لمشاهدة عدد المنتجات المتأثرة
+    </div>
+
+    <div style="display: flex; gap: 12px; margin-top: auto; padding-top: 24px;">
+      <button class="btn btn-gold" style="flex: 1;" onclick="applyBulkDiscount()" data-i18n="apply_to_all">تطبيق على الكل</button>
+      <button class="btn btn-outline" style="color: var(--error); border-color: var(--error);" onclick="removeAllDiscounts()" data-i18n="remove_all_discounts">إزالة جميع التخفيضات</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- SECTION C — Active Discounts List -->
+<div class="form-section" style="margin-top: 24px;">
+  <h3 class="form-section-title" data-i18n="active_discounts_title">ج. المنتجات المخفضة حالياً</h3>
+  <div class="table-wrap" style="margin-top: 16px;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th data-i18n="image">صورة</th>
+          <th data-i18n="product_name">اسم المنتج</th>
+          <th data-i18n="original_price">السعر الأصلي</th>
+          <th data-i18n="sale_price">سعر التخفيض</th>
+          <th data-i18n="table_actions">الإجراء</th>
+        </tr>
+      </thead>
+      <tbody id="active-discounts-body">
+        <tr><td colspan="5" style="text-align:center;padding:20px;color:#999">جاري تحميل التخفيضات...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+.dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  display: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.dropdown-item {
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.dropdown-item:hover { background: var(--beige-light); }
+.bulk-preview-box {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--beige-light);
+  border-radius: 8px;
+  font-size: 13px;
+  color: rgba(0,0,0,0.6);
+  text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let searchTimer = null;
+
+async function onProductSearch() {
+  const q = document.getElementById('product-search').value.trim();
+  const dd = document.getElementById('product-dropdown');
+  if (!q) { dd.style.display = 'none'; return; }
+
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(async () => {
+    try {
+      const data = await Admin.adminFetch(`/admin/api/products?search=${q}&per_page=10`);
+      const products = data.products || [];
+      if (products.length === 0) {
+        dd.innerHTML = `<div class="dropdown-item">${t('no_results_found')}</div>`;
+      } else {
+        dd.innerHTML = products.map(p => `
+          <div class="dropdown-item" onclick="selectProduct(${p.id}, '${currentLang === 'ar' ? p.name_ar : p.name_en}')">
+            ${currentLang === 'ar' ? p.name_ar : p.name_en} <span style="font-size: 11px; opacity: 0.5;">(${parseFloat(p.price_jod).toFixed(3)} JOD)</span>
+          </div>
+        `).join('');
+      }
+      dd.style.display = 'block';
+    } catch (e) { console.error(e); }
+  }, 300);
+}
+
+function selectProduct(id, name) {
+  document.getElementById('selected-product-id').value = id;
+  document.getElementById('product-search').value = name;
+  document.getElementById('product-dropdown').style.display = 'none';
+}
+
+async function applyProductSale() {
+  const id = document.getElementById('selected-product-id').value;
+  const price = document.getElementById('sale-price').value;
+  if (!id || !price) { Admin.showToast(t('select_product_and_price_warning'), 'warning'); return; }
+  
+  try {
+    await Admin.adminFetch(`/admin/api/products/${id}`, {
+      method: 'PUT',
+      body: { is_on_sale: true, sale_price_jod: parseFloat(price) }
+    });
+    Admin.showToast(t('sale_applied_success'), 'success');
+    loadActiveDiscounts();
+  } catch (e) { Admin.showToast(e.message, 'error'); }
+}
+
+async function removeProductSale() {
+  const id = document.getElementById('selected-product-id').value;
+  if (!id) { Admin.showToast(t('select_product_first_warning'), 'warning'); return; }
+  
+  try {
+    await Admin.adminFetch(`/admin/api/products/${id}`, {
+      method: 'PUT',
+      body: { is_on_sale: false, sale_price_jod: null }
+    });
+    Admin.showToast(t('sale_removed_success'), 'success');
+  } catch (e) { Admin.showToast(e.message, 'error'); }
+}
+
+async function previewCategoryBulk() {
+  const cat = document.getElementById('category-select').value;
+  const preview = document.getElementById('bulk-preview');
+  if (!cat) { preview.textContent = t('select_category_to_preview'); return; }
+
+  try {
+    const data = await Admin.adminFetch(`/admin/api/products?category=${cat}&per_page=1`);
+    preview.innerHTML = t('bulk_preview_text').replace('{count}', data.total);
+  } catch (e) { preview.textContent = t('failed_to_load_preview'); }
+}
+
+function applyBulkDiscount() {
+  const cat = document.getElementById('category-select').value;
+  const pct = document.getElementById('bulk-percent').value;
+  if (!cat || !pct) { Admin.showToast(t('select_category_and_percent_warning'), 'warning'); return; }
+
+  Admin.showConfirm(t('confirm_bulk_apply').replace('{pct}', pct), async () => {
+    try {
+      await Admin.adminFetch('/admin/api/discounts/bulk', {
+        method: 'POST',
+        body: { category: cat, discount_pct: parseInt(pct) }
+      });
+      Admin.showToast(t('bulk_applied_success'), 'success');
+      loadActiveDiscounts();
+    } catch (e) { Admin.showToast(e.message, 'error'); }
+  }, t('apply_to_all'));
+}
+
+function removeAllDiscounts(catId) {
+  const cat = typeof catId === 'string' ? catId : document.getElementById('category-select').value;
+  if (!cat) { Admin.showToast(t('select_category_first_warning'), 'warning'); return; }
+
+  Admin.showConfirm(t('confirm_bulk_remove').replace('{cat}', cat), async () => {
+    try {
+      await Admin.adminFetch('/admin/api/discounts/bulk', {
+        method: 'DELETE',
+        body: { category: cat }
+      });
+      Admin.showToast(t('bulk_removed_success'), 'success');
+      loadActiveDiscounts();
+    } catch (e) { Admin.showToast(e.message, 'error'); }
+  }, t('remove_all_discounts') || 'إزالة', true);
+}
+
+const CATEGORY_NAMES_AR = {
+  'necklaces': 'قلائد', 'earrings': 'أقراط', 'bracelets': 'أساور',
+  'rings': 'خواتم', 'belly-rings': 'بيرسينج بطن', 'anklets': 'خلاخيل', 'sets': 'أطقم'
+};
+const CATEGORY_NAMES_EN = {
+  'necklaces': 'Necklaces', 'earrings': 'Earrings', 'bracelets': 'Bracelets',
+  'rings': 'Rings', 'belly-rings': 'Belly Rings', 'anklets': 'Anklets', 'sets': 'Sets'
+};
+
+async function loadActiveDiscounts() {
+  const tbody = document.getElementById('active-discounts-body');
+  try {
+    const data = await Admin.adminFetch('/admin/api/products?on_sale=true&per_page=100');
+    const products = data.products || [];
+    if (products.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#999">${t('no_discounts_active') || 'لا توجد تخفيضات نشطة'}</td></tr>`;
+      return;
+    }
+    
+    // Group products by category
+    const grouped = {};
+    products.forEach(p => {
+      const c = p.category || 'other';
+      if (!grouped[c]) grouped[c] = [];
+      grouped[c].push(p);
+    });
+
+    let html = '';
+    for (const [cat, items] of Object.entries(grouped)) {
+      const catName = currentLang === 'ar' ? (CATEGORY_NAMES_AR[cat] || cat) : (CATEGORY_NAMES_EN[cat] || cat);
+      const headerText = currentLang === 'ar' ? `فئة: ${catName} (${items.length} منتجات)` : `Category: ${catName} (${items.length} product(s))`;
+      const cancelCategoryText = currentLang === 'ar' ? 'إلغاء تخفيض الفئة بالكامل' : 'Remove Category Discount';
+      const cancelIndividualText = currentLang === 'ar' ? 'إلغاء الخصم (فردي)' : 'Remove Discount (Individual)';
+      
+      html += `
+        <tr style="background: rgba(201, 169, 110, 0.1);">
+          <td colspan="4" style="font-weight: 700; color: var(--admin-text-main);">${headerText}</td>
+          <td>
+            <button class="btn btn-sm" style="background: var(--error); color: white; border: none; padding: 4px 12px; border-radius: 4px; font-weight: 700; font-size: 11px;" onclick="removeAllDiscounts('${cat}')">
+              ${cancelCategoryText}
+            </button>
+          </td>
+        </tr>
+      `;
+      items.forEach(p => {
+        html += `
+          <tr>
+            <td><img src="${p.primary_image || ''}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"></td>
+            <td style="font-weight:600">${currentLang === 'ar' ? p.name_ar : p.name_en}</td>
+            <td style="text-decoration:line-through;opacity:0.5">${parseFloat(p.price_jod).toFixed(3)} JOD</td>
+            <td style="color:var(--error);font-weight:700">${parseFloat(p.sale_price_jod).toFixed(3)} JOD</td>
+            <td>
+              <button class="btn btn-sm btn-outline" style="color:var(--error);border-color:var(--error);padding:4px 8px;" onclick="cancelDiscount(${p.id})">
+                ${cancelIndividualText}
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+    tbody.innerHTML = html;
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red">فشل تحميل القائمة</td></tr>';
+  }
+}
+
+async function cancelDiscount(id) {
+  try {
+    await Admin.adminFetch(`/admin/api/products/${id}`, {
+      method: 'PUT',
+      body: { is_on_sale: false, sale_price_jod: null }
+    });
+    Admin.showToast(t('sale_removed_success'), 'success');
+    loadActiveDiscounts();
+  } catch (e) { Admin.showToast(e.message, 'error'); }
+}
+
+document.addEventListener('DOMContentLoaded', loadActiveDiscounts);
+window.addEventListener('languageChanged', loadActiveDiscounts);
+</script>
+{% endblock %}

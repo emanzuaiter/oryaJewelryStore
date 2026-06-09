@@ -1,0 +1,250 @@
+{% extends "admin/base_admin.html" %}
+{% set active = 'chatbot' %}
+
+{% block title %}سجلات المحادثات — ORYA Admin{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <!-- Sidebar: Conversation List -->
+    <div class="chat-sidebar">
+        <div class="sidebar-header">
+            <h2 data-i18n="chatbot_logs_title">المحادثات</h2>
+            <div class="chat-stats">
+                <span id="stat-count">—</span> اليوم
+            </div>
+        </div>
+        <div class="session-list" id="session-list">
+            <div class="loading-row"><div class="spinner"></div></div>
+        </div>
+        <div id="pagination" class="chat-pagination"></div>
+    </div>
+
+    <!-- Main: Message View -->
+    <div class="chat-main">
+        <div id="chat-header" class="chat-main-header">
+            <div class="header-info">
+                <h3 id="active-user-name">اختر محادثة للبدء</h3>
+                <span id="active-session-id" class="session-tag"></span>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-sm btn-outline" onclick="loadMessages(activeSessionId)">تحديث</button>
+            </div>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="60" height="60">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                <p>اختر محادثة من القائمة الجانبية لاستعراض سجل الرسائل</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.chat-container {
+    display: flex;
+    height: calc(100vh - 120px);
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Sidebar */
+.chat-sidebar {
+    width: 350px;
+    border-left: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    background: #fbfbfb;
+}
+.sidebar-header {
+    padding: 24px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fff;
+}
+.sidebar-header h2 { font-size: 18px; color: var(--admin-text-main); margin-bottom: 5px; }
+.chat-stats { font-size: 12px; color: var(--admin-text-muted); }
+.chat-stats span { color: var(--admin-accent); font-weight: 700; }
+
+.session-list { flex: 1; overflow-y: auto; }
+.session-item {
+    padding: 18px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-right: 4px solid transparent;
+}
+.session-item:hover { background: #f4f7fe; }
+.session-item.active {
+    background: #fff;
+    border-right-color: var(--admin-accent);
+    box-shadow: -4px 0 15px rgba(0,0,0,0.02);
+}
+.session-user { font-weight: 700; color: var(--admin-text-main); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.session-time { font-size: 10px; color: var(--admin-text-muted); font-weight: 400; }
+.session-last-msg {
+    font-size: 12px;
+    color: var(--admin-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Main */
+.chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+}
+.chat-main-header {
+    padding: 20px 30px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.session-tag { font-size: 10px; color: #a0a0a0; background: #f5f5f5; padding: 2px 8px; border-radius: 10px; margin-right: 10px; }
+
+.chat-messages {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: #fdfdfd;
+}
+.msg { max-width: 70%; display: flex; flex-direction: column; }
+.msg.user { align-self: flex-end; }
+.msg.bot { align-self: flex-start; }
+.bubble {
+    padding: 12px 16px;
+    border-radius: 15px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.msg.user .bubble { background: var(--admin-sidebar); color: #fff; border-bottom-left-radius: 2px; }
+.msg.bot .bubble { background: #f0f0f0; color: #333; border-bottom-right-radius: 2px; }
+.msg-time { font-size: 10px; color: #999; margin-top: 5px; }
+.msg.user .msg-time { text-align: left; }
+
+.empty-state {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ccc;
+    text-align: center;
+}
+.empty-state p { margin-top: 15px; font-size: 14px; }
+
+.chat-pagination { padding: 15px; border-top: 1px solid #f0f0f0; display: flex; justify-content: center; gap: 5px; background: #fff; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let activeSessionId = null;
+let currentPage = 1;
+let loadedSessions = [];
+
+async function loadSessions(page = 1) {
+    currentPage = page;
+    const list = document.getElementById('session-list');
+    list.innerHTML = '<div class="loading-row"><div class="spinner"></div></div>';
+
+    try {
+        const data = await Admin.adminFetch(`/admin/api/chatbot/logs?page=${page}`);
+        const sessions = data.sessions || [];
+        loadedSessions = sessions;
+        document.getElementById('stat-count').textContent = data.stats.count_today || '0';
+
+        if (sessions.length === 0) {
+            list.innerHTML = '<div style="text-align:center;padding:40px;color:#999">لا توجد محادثات</div>';
+            return;
+        }
+
+        list.innerHTML = sessions.map(s => `
+            <div class="session-item ${activeSessionId === s.session_id ? 'active' : ''}" data-session-id="${s.session_id}" onclick="selectSession('${s.session_id}', '${s.username ? '@' + s.username : 'زائر'}')">
+                <div class="session-user">
+                    <span>${s.username ? '@' + s.username : 'زائر'}</span>
+                    <span class="session-time">${new Date(s.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                </div>
+                <div class="session-last-msg">${s.last_message}</div>
+            </div>
+        `).join('');
+
+        renderPagination(page, data.pages);
+    } catch (e) {
+        list.innerHTML = '<div style="text-align:center;padding:40px;color:red">فشل تحميل المحادثات</div>';
+    }
+}
+
+async function selectSession(sessionId, username) {
+    activeSessionId = sessionId;
+    document.querySelectorAll('.session-item').forEach(i => i.classList.remove('active'));
+    
+    // Highlight the selected one by data-session-id
+    const activeItem = document.querySelector(`.session-item[data-session-id="${sessionId}"]`);
+    if (activeItem) {
+        activeItem.classList.add('active');
+    }
+
+    document.getElementById('active-user-name').textContent = username;
+    document.getElementById('active-session-id').textContent = sessionId.substring(0, 8) + '...';
+    
+    loadMessages(sessionId);
+}
+
+async function loadMessages(sessionId) {
+    const box = document.getElementById('chat-messages');
+    box.innerHTML = '<div class="loading-row"><div class="spinner"></div></div>';
+
+    try {
+        const data = await Admin.adminFetch(`/admin/api/chatbot/logs/session/${sessionId}`);
+        const messages = data.messages || [];
+
+        box.innerHTML = messages.map(m => `
+            <div class="msg ${m.sender === 'user' ? 'user' : 'bot'}">
+                <div class="bubble">${m.text}</div>
+                <div class="msg-time">${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+            </div>
+        `).join('');
+        
+        box.scrollTop = box.scrollHeight;
+    } catch (e) {
+        box.innerHTML = '<div style="text-align:center;padding:40px;color:red">فشل تحميل الرسائل</div>';
+    }
+}
+
+function renderPagination(current, total) {
+    const el = document.getElementById('pagination');
+    if (total <= 1) { el.innerHTML = ''; return; }
+    let html = '';
+    for (let i = 1; i <= total; i++) {
+        html += `<button class="page-btn ${i===current?'active':''}" onclick="loadSessions(${i})" style="width:30px;height:30px;padding:0;font-size:12px;">${i}</button>`;
+    }
+    el.innerHTML = html;
+}
+
+// Check for session in URL on load
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionFromUrl = urlParams.get('session');
+    
+    loadSessions(1).then(() => {
+        if (sessionFromUrl) {
+            // Try to find the session username in loadedSessions
+            const found = loadedSessions.find(s => s.session_id === sessionFromUrl);
+            const displayName = found ? (found.username ? '@' + found.username : 'زائر') : 'مستخدم من الإشعار';
+            selectSession(sessionFromUrl, displayName);
+        }
+    });
+});
+</script>
+{% endblock %}

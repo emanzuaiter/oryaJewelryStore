@@ -1,0 +1,315 @@
+{% extends "admin/base_admin.html" %}
+{% set active = 'orders' %}
+
+{% block title %}<span data-i18n="order_details_title">تفاصيل الطلب</span> #{{ order.display_id }} — ORYA Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">طلب <span style="color: var(--gold);">#{{ order.display_id }}</span></h1>
+    <p class="page-subtitle">{{ order.created_at.strftime('%Y/%m/%d — %H:%M') if order.created_at else '' }}</p>
+  </div>
+  <a href="/admin/orders" class="btn btn-outline">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+      <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+    </svg>
+    <span data-i18n="return_to_orders">عودة للطلبات</span>
+  </a>
+</div>
+
+<div class="order-detail-grid">
+  
+  <!-- LEFT COLUMN (60%) -->
+  <div class="order-main-col">
+    
+    <!-- Customer Info Card (Editable) -->
+    <div class="form-section no-margin">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 class="form-section-title" style="margin: 0;" data-i18n="shipping_customer_info">بيانات العميل والشحن</h3>
+        <button class="btn btn-gold btn-sm" onclick="saveCustomerInfo()" data-i18n="save_changes">حفظ التعديلات</button>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" data-i18n="full_name_label">الاسم الكامل</label>
+          <input type="text" class="form-input" id="cust-name" value="{{ order.full_name }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="phone_label">رقم الهاتف</label>
+          <input type="text" class="form-input" id="cust-phone" value="{{ order.phone }}" dir="ltr">
+        </div>
+      </div>
+      
+      <div class="form-row three">
+        <div class="form-group">
+          <label class="form-label" data-i18n="city_label">المدينة</label>
+          <input type="text" class="form-input" id="cust-city" value="{{ order.city }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="area_label">المنطقة</label>
+          <input type="text" class="form-input" id="cust-area" value="{{ order.area }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="detailed_address_label">العنوان بالتفصيل</label>
+          <input type="text" class="form-input" id="cust-address" value="{{ order.address }}">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" data-i18n="customer_notes">ملاحظات العميل</label>
+        <textarea class="form-textarea" id="cust-notes" rows="2">{{ order.notes }}</textarea>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="table-card" style="margin-top: 24px;">
+      <div class="table-card-header">
+        <span class="table-card-title" data-i18n="order_items">عناصر الطلب</span>
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th class="col-img"></th>
+            <th data-i18n="table_review_product">المنتج</th>
+            <th style="text-align: center;" data-i18n="table_stock">الكمية</th>
+            <th data-i18n="unit_price">سعر الوحدة</th>
+            <th style="text-align: left;" data-i18n="table_total">المجموع</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in order.items %}
+          <tr>
+            <td>
+              <a href="{{ url_for('products.product_detail', id=item.product.id) if item.product else '#' }}" target="_blank" style="display:block;">
+                <img src="/{{ item.product.primary_image if item.product and item.product.primary_image else 'static/images/placeholder.png' }}" 
+                     class="product-thumb" style="width: 40px; height: 40px;">
+              </a>
+            </td>
+            <td>
+              <a href="{{ url_for('products.product_detail', id=item.product.id) if item.product else '#' }}" target="_blank" style="text-decoration:none; color:inherit;">
+                <div style="font-weight: 600;">{{ item.product.name_ar if item.product else 'منتج غير موجود' }}</div>
+                <div style="font-size: 11px; opacity: 0.5;">{{ item.product.name_en if item.product else '' }}</div>
+              </a>
+            </td>
+            <td style="text-align: center;">{{ item.quantity }}</td>
+            <td>{{ "%.3f"|format(item.unit_price_jod) }} JOD</td>
+            <td style="text-align: left; font-weight: 700;">{{ "%.3f"|format(item.quantity * item.unit_price_jod) }} JOD</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <!-- Summary area -->
+      <div class="order-summary-box">
+        <div class="summary-line">
+          <span data-i18n="subtotal">المجموع الفرعي</span>
+          <span>{{ "%.3f"|format(order.subtotal_jod) }} JOD</span>
+        </div>
+        {% if order.coupon_code %}
+        <div class="summary-line coupon">
+          <span><span data-i18n="coupon_label">كوبون</span> ({{ order.coupon_code }})</span>
+          <span>-{{ "%.3f"|format(order.discount_jod) }} JOD</span>
+        </div>
+        {% endif %}
+        <div class="summary-line">
+          <span data-i18n="delivery_fee">التوصيل</span>
+          <span>{{ "%.3f"|format(order.delivery_fee_jod) }} JOD</span>
+        </div>
+        <div class="summary-line total">
+          <span data-i18n="final_total">الإجمالي النهائي</span>
+          <span>{{ "%.3f"|format(order.total_jod) }} JOD</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN (40%) -->
+  <div class="order-side-col">
+    
+    <!-- Order Timeline -->
+    <div class="info-card">
+      <h3 class="info-card-title" data-i18n="order_tracking">تتبع الطلب</h3>
+      <div class="order-timeline">
+        {% set STATUS_WEIGHT = {'pending_verification':1,'confirmed':2,'pending':3,'processing':4,'delivered':5,'cancelled':0} %}
+        {% set cur_weight = STATUS_WEIGHT.get(order.status, 0) %}
+        {% set steps = [
+          ('pending_verification', 'قيد التحقق'),
+          ('confirmed', 'تم التأكيد'),
+          ('pending', 'قيد الانتظار'),
+          ('processing', 'جاري التجهيز'),
+          ('delivered', 'تم التوصيل')
+        ] %}
+        
+        {% for status, label in steps %}
+          {% set step_weight = STATUS_WEIGHT.get(status, 0) %}
+          {% set is_active = (order.status != 'cancelled') and (cur_weight >= step_weight) %}
+          <div class="timeline-item {{ 'completed' if is_active else '' }}">
+            <div class="timeline-point"></div>
+            <div class="timeline-content">
+              <span class="timeline-label" data-i18n="order_status_{{ status }}">{{ label }}</span>
+              <span class="timeline-date">
+                {% if status == 'pending_verification' %}
+                  {{ order.created_at.strftime('%Y/%m/%d %H:%M') if order.created_at else '' }}
+                {% elif is_active and order.updated_at %}
+                  {{ order.updated_at.strftime('%Y/%m/%d %H:%M') }}
+                {% else %}
+                  —
+                {% endif %}
+              </span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Status Update -->
+    <div class="info-card">
+      <h3 class="info-card-title" data-i18n="status_update">تحديث الحالة</h3>
+      <p style="font-size: 11px; opacity: 0.6; margin-bottom: 12px;" data-i18n="email_notification_note">سيتم إرسال بريد إلكتروني للعميل تلقائياً عند التحديث</p>
+      <select class="form-select" id="order-status-select" style="margin-bottom: 12px;">
+        <option value="pending_verification" {% if order.status == 'pending_verification' %}selected{% endif %} data-i18n="order_status_pending_verification">قيد التحقق</option>
+        <option value="confirmed" {% if order.status == 'confirmed' %}selected{% endif %} data-i18n="order_status_confirmed">تم التأكيد</option>
+        <option value="pending" {% if order.status == 'pending' %}selected{% endif %} data-i18n="order_status_pending">قيد الانتظار</option>
+        <option value="processing" {% if order.status == 'processing' %}selected{% endif %} data-i18n="order_status_processing">جاري التجهيز</option>
+        <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %} data-i18n="order_status_delivered">تم التوصيل</option>
+        <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %} data-i18n="order_status_cancelled">ملغي</option>
+      </select>
+      <button class="btn btn-gold btn-full" onclick="updateOrderStatus()" data-i18n="update_status_btn">تحديث الحالة الآن</button>
+    </div>
+
+    <!-- Admin Notes -->
+    <div class="info-card">
+      <h3 class="info-card-title" data-i18n="internal_notes">ملاحظات داخلية</h3>
+      <textarea class="form-textarea" id="admin-notes" rows="4" 
+                data-i18n-placeholder="internal_notes_placeholder" placeholder="أضف ملاحظات للموظفين فقط...">{{ order.admin_notes or '' }}</textarea>
+      <button class="btn btn-outline btn-full" style="margin-top: 10px;" onclick="saveAdminNotes()" data-i18n="save_notes">حفظ الملاحظات</button>
+    </div>
+
+  </div>
+
+</div>
+
+<style>
+.order-detail-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 24px;
+}
+.order-summary-box {
+  padding: 20px;
+  border-top: 1px solid var(--border);
+  background: rgba(201, 169, 110, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: rgba(0,0,0,0.6);
+}
+.summary-line.coupon { color: var(--success); }
+.summary-line.total {
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--gold);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+
+.order-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-right: 10px;
+}
+.timeline-item {
+  display: flex;
+  gap: 15px;
+  position: relative;
+}
+.timeline-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 6px;
+  top: 18px;
+  width: 2px;
+  height: calc(100% + 4px);
+  background: var(--border);
+}
+.timeline-point {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: #fff;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.timeline-item.completed .timeline-point {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.timeline-content {
+  display: flex;
+  flex-direction: column;
+}
+.timeline-label { font-size: 14px; font-weight: 600; }
+.timeline-date { font-size: 11px; opacity: 0.5; }
+
+@media (max-width: 992px) {
+  .order-detail-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const ORDER_ID = {{ order.id }};
+
+async function updateOrderStatus() {
+  const status = document.getElementById('order-status-select').value;
+  try {
+    await Admin.adminFetch(`/admin/api/orders/${ORDER_ID}/status`, {
+      method: 'PUT',
+      body: { status }
+    });
+    Admin.showToast(t('order_status_updated_success') || 'Updated', 'success');
+    setTimeout(() => location.reload(), 1000);
+  } catch (e) { Admin.showToast(e.message, 'error'); }
+}
+
+async function saveAdminNotes() {
+  const notes = document.getElementById('admin-notes').value;
+  try {
+    await Admin.adminFetch(`/admin/api/orders/${ORDER_ID}`, {
+      method: 'PUT',
+      body: { admin_notes: notes }
+    });
+    Admin.showToast(t('notes_saved_success') || 'Notes saved', 'success');
+  } catch (e) { Admin.showToast(e.message, 'error'); }
+}
+
+async function saveCustomerInfo() {
+  const payload = {
+    full_name: document.getElementById('cust-name').value,
+    phone: document.getElementById('cust-phone').value,
+    city: document.getElementById('cust-city').value,
+    area: document.getElementById('cust-area').value,
+    address: document.getElementById('cust-address').value,
+    notes: document.getElementById('cust-notes').value
+  };
+  
+  try {
+    await Admin.adminFetch(`/admin/api/orders/${ORDER_ID}`, {
+      method: 'PUT',
+      body: payload
+    });
+    Admin.showToast(t('shipping_info_updated_success') || 'Updated', 'success');
+  } catch (e) { Admin.showToast(e.message, 'error'); }
+}
+</script>
+{% endblock %}

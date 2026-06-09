@@ -1,0 +1,263 @@
+{% extends "admin/base_admin.html" %}
+{% set active = 'orders' %}
+
+{% block title %}<span data-i18n="admin_orders">الطلبات</span> — ORYA Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title" data-i18n="admin_orders_title">إدارة الطلبات</h1>
+    <p class="page-subtitle" id="orders-summary" data-i18n="admin_orders_subtitle">متابعة وعمليات الطلبات الحالية</p>
+  </div>
+  <button class="btn btn-outline" onclick="exportOrders()" title="تحميل ملف CSV">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    <span data-i18n="export_csv">تصدير CSV</span>
+  </button>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar" style="flex-direction: column; align-items: stretch; gap: 16px;">
+  
+  <!-- Status Tabs -->
+  <div class="status-tabs" id="status-tabs">
+    <button class="status-tab active" data-status="all" onclick="filterByStatus('all')" data-i18n="all_status">الكل</button>
+    <button class="status-tab" data-status="pending_verification" onclick="filterByStatus('pending_verification')" data-i18n="status_pending_verification">قيد التحقق</button>
+    <button class="status-tab" data-status="confirmed" onclick="filterByStatus('confirmed')" data-i18n="status_confirmed">تم التأكيد</button>
+    <button class="status-tab" data-status="pending" onclick="filterByStatus('pending')" data-i18n="status_pending">قيد الانتظار</button>
+    <button class="status-tab" data-status="processing" onclick="filterByStatus('processing')" data-i18n="status_processing">جاري التجهيز</button>
+    <button class="status-tab" data-status="delivered" onclick="filterByStatus('delivered')" data-i18n="status_delivered">تم التوصيل</button>
+    <button class="status-tab" data-status="cancelled" onclick="filterByStatus('cancelled')" data-i18n="status_cancelled">ملغي</button>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+    <!-- Search -->
+    <div class="search-wrap" style="flex: 1; min-width: 280px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" class="search-input" id="search-input" 
+             data-i18n-placeholder="search_order_placeholder" placeholder="البحث بالاسم، الهاتف، أو رقم الطلب..." oninput="onSearchInput()">
+    </div>
+
+    <!-- Date Range -->
+    <div class="form-group" style="margin-bottom: 0;">
+      <label class="form-label" style="font-size: 11px; margin-bottom: 4px;" data-i18n="from_date">من تاريخ</label>
+      <input type="date" class="form-input" id="date-from" style="padding: 8px 12px;" onchange="loadOrders(1)">
+    </div>
+    <div class="form-group" style="margin-bottom: 0;">
+      <label class="form-label" style="font-size: 11px; margin-bottom: 4px;" data-i18n="to_date">إلى تاريخ</label>
+      <input type="date" class="form-input" id="date-to" style="padding: 8px 12px;" onchange="loadOrders(1)">
+    </div>
+  </div>
+
+</div>
+
+<!-- ORDERS TABLE -->
+<div class="table-card">
+  <div id="orders-table-wrap">
+    <div class="loading-row"><div class="spinner"></div></div>
+  </div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<style>
+/* Custom status badge colors for orders */
+.badge-pending_verification { background: #EDE9FE; color: #5B21B6; }
+.badge-confirmed   { background: #D1FAE5; color: #065F46; }
+.badge-pending     { background: #FEF3C7; color: #92400E; }
+.badge-processing  { background: #DBEAFE; color: #1E40AF; }
+.badge-delivered   { background: #D1FAE5; color: #065F46; }
+.badge-cancelled   { background: #F3F4F6; color: #374151; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentStatus = 'all';
+let searchTimer = null;
+let currentPage = 1;
+
+function filterByStatus(status) {
+  currentStatus = status;
+  document.querySelectorAll('.status-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.status === status);
+  });
+  loadOrders(1);
+}
+
+function onSearchInput() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadOrders(1), 400);
+}
+
+async function loadOrders(page = 1) {
+  currentPage = page;
+  const searchInput = document.getElementById('search-input');
+  const dateFrom = document.getElementById('date-from').value;
+  const dateTo = document.getElementById('date-to').value;
+
+  const params = new URLSearchParams({
+    page: page,
+    per_page: 20,
+    status: currentStatus,
+    search: searchInput.value.trim(),
+    date_from: dateFrom,
+    date_to: dateTo
+  });
+
+  const wrap = document.getElementById('orders-table-wrap');
+  wrap.innerHTML = '<div class="loading-row"><div class="spinner"></div></div>';
+
+  try {
+    const data = await Admin.adminFetch('/admin/api/orders?' + params.toString());
+    const orders = data.orders || [];
+    const total = data.total || 0;
+    const pages = data.pages || 1;
+
+    document.getElementById('orders-summary').innerHTML = `${t('admin_orders_subtitle')} (${total} ${t('total_orders_text')})`;
+
+    if (orders.length === 0) {
+      wrap.innerHTML = `<div class="table-empty" data-i18n="no_orders_found">${t('no_orders_found')}</div>`;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th data-i18n="table_order_id">${t('table_order_id')}</th>
+            <th data-i18n="table_customer">${t('table_customer')}</th>
+            <th data-i18n="table_phone">${t('table_phone')}</th>
+            <th data-i18n="table_date">${t('table_date')}</th>
+            <th data-i18n="table_products">${t('table_products')}</th>
+            <th data-i18n="table_total">${t('table_total')}</th>
+            <th data-i18n="table_status">${t('table_status')}</th>
+            <th data-i18n="table_view">${t('table_view')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${orders.map(o => `
+            <tr>
+              <td><strong>#${o.display_id}</strong></td>
+              <td>${o.full_name || '—'}</td>
+              <td dir="ltr" style="text-align: right;">${o.phone || '—'}</td>
+              <td>${new Date(o.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-JO' : 'en-US')}</td>
+              <td>${o.items_count} ${t('items_count_text')}</td>
+              <td style="font-weight: 700;">${parseFloat(o.total_jod).toFixed(3)} JOD</td>
+              <td>${getStatusBadge(o.status)}</td>
+              <td>
+                <div style="display: flex; gap: 8px; justify-content: center;">
+                  ${o.status === 'pending' || o.status === 'processing' ? `
+                  <button class="btn-icon" style="background: var(--gold); color: white;" title="${o.status === 'pending' ? 'نقل إلى جاري التجهيز' : 'نقل إلى تم التوصيل'}" onclick="quickAdvanceOrder(${o.id}, '${o.status}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+                  ` : ''}
+                  <a href="/admin/orders/${o.id}" class="btn-icon primary" data-i18n-title="table_view">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    renderPagination(page, pages);
+
+  } catch (e) {
+    console.error('Orders load error:', e);
+    Admin.showToast(t('error_loading_orders') || 'Error loading orders', 'error');
+  }
+}
+
+async function quickAdvanceOrder(id, currentStatus) {
+  const nextStatus = currentStatus === 'pending' ? 'processing' : 'delivered';
+  try {
+    await Admin.adminFetch(`/admin/api/orders/${id}/status`, {
+      method: 'PUT',
+      body: { status: nextStatus }
+    });
+    Admin.showToast('تم تحديث حالة الطلب بنجاح', 'success');
+    loadOrders(currentPage);
+  } catch (e) {
+    console.error(e);
+    Admin.showToast('حدث خطأ أثناء تحديث الحالة', 'error');
+  }
+}
+
+function getStatusBadge(status) {
+  const map = {
+    pending_verification: { label: t('status_pending_verification'), cls: 'badge-pending_verification' },
+    confirmed:   { label: t('status_confirmed'),   cls: 'badge-confirmed' },
+    pending:     { label: t('status_pending'),     cls: 'badge-pending' },
+    processing:  { label: t('status_processing'),  cls: 'badge-processing' },
+    delivered:   { label: t('status_delivered'),   cls: 'badge-delivered' },
+    cancelled:   { label: t('status_cancelled'),   cls: 'badge-cancelled' }
+  };
+  const config = map[status] || { label: status, cls: '' };
+  return `<span class="status-badge ${config.cls}">${config.label}</span>`;
+}
+
+function renderPagination(current, total) {
+  const el = document.getElementById('pagination');
+  if (total <= 1) { el.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" onclick="loadOrders(${current-1})" ${current===1?'disabled':''}>›</button>`;
+  
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || (i >= current - 1 && i <= current + 1)) {
+      html += `<button class="page-btn ${i===current?'active':''}" onclick="loadOrders(${i})">${i}</button>`;
+    } else if (i === current - 2 || i === current + 2) {
+      html += '<span style="padding: 0 5px;">...</span>';
+    }
+  }
+  
+  html += `<button class="page-btn" onclick="loadOrders(${current+1})" ${current===total?'disabled':''}>‹</button>`;
+  el.innerHTML = html;
+}
+
+function exportOrders() {
+  const searchInput = document.getElementById('search-input');
+  const dateFrom = document.getElementById('date-from').value;
+  const dateTo = document.getElementById('date-to').value;
+
+  const params = new URLSearchParams({
+    status: currentStatus,
+    search: searchInput.value.trim(),
+    date_from: dateFrom,
+    date_to: dateTo
+  });
+
+  window.location.href = '/admin/api/orders/export?' + params.toString();
+}
+
+// Check for status in URL (e.g. from dashboard)
+const urlParams = new URLSearchParams(window.location.search);
+const statusParam = urlParams.get('status');
+if (statusParam) {
+  currentStatus = statusParam;
+  document.querySelectorAll('.status-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.status === statusParam);
+  });
+}
+
+// Initial load
+loadOrders(1);
+
+// Refresh on language change
+let _lastLang = window.currentLang;
+window.addEventListener('languageChanged', (e) => {
+  if (e.detail && e.detail.lang !== _lastLang) {
+    _lastLang = e.detail.lang;
+    loadOrders(currentPage);
+  }
+});
+</script>
+{% endblock %}

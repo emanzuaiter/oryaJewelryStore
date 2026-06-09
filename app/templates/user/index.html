@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+{% from "macros.html" import render_product_card %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<!-- SECTION 1 — HERO -->
+<section class="hero-new">
+    <div class="hero-content-new">
+        <span class="hero-subtitle" data-i18n="hero_hello">Hello Beautiful</span>
+        <h1 class="hero-title-new" data-i18n="hero_welcome">Welcome to ORYA Jewelry Store</h1>
+        <p class="hero-tagline-new"
+           data-dynamic-ar="{{ site_settings.hero_tagline_ar or 'اكتشفي تشكيلتنا الحصرية المصنوعة يدوياً' }}"
+           data-dynamic-en="{{ site_settings.hero_tagline_en or 'Discover our exclusive handcrafted collection' }}">
+            {% if session.get('lang', 'ar') == 'ar' %}
+                {{ site_settings.hero_tagline_ar or 'اكتشفي تشكيلتنا الحصرية المصنوعة يدوياً' }}
+            {% else %}
+                {{ site_settings.hero_tagline_en or 'Discover our exclusive handcrafted collection' }}
+            {% endif %}
+        </p>
+        <a href="/products/all" class="btn-primary-new" data-i18n="hero_cta">Explore Now</a>
+    </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrapper">
+    <div class="marquee-content">
+        <span data-i18n="hero_hello">Hello Beautiful</span>
+        <i>✧</i>
+        <span data-dynamic-ar="{{ site_settings.hero_tagline_ar or 'اكتشفي تشكيلتنا الحصرية المصنوعة يدوياً' }}"
+              data-dynamic-en="{{ site_settings.hero_tagline_en or 'Discover our exclusive handcrafted collection' }}">
+            {% if session.get('lang', 'ar') == 'ar' %}
+                {{ site_settings.hero_tagline_ar or 'اكتشفي تشكيلتنا الحصرية المصنوعة يدوياً' }}
+            {% else %}
+                {{ site_settings.hero_tagline_en or 'Discover our exclusive handcrafted collection' }}
+            {% endif %}
+        </span>
+        <i>✧</i>
+        <span data-i18n="hero_hello">Hello Beautiful</span>
+        <i>✧</i>
+        <span data-dynamic-ar="{{ site_settings.hero_tagline_ar or 'اكتشفي تشكيلتنا الحصرية المصنوعة يدوياً' }}"
+              data-dynamic-en="{{ site_settings.hero_tagline_en or 'Discover our exclusive handcrafted collection' }}">
+            {% if session.get('lang', 'ar') == 'ar' %}
+                {{ site_settings.hero_tagline_ar or 'اكتشفي تشكيلتنا الحصرية المصنوعة يدوياً' }}
+            {% else %}
+                {{ site_settings.hero_tagline_en or 'Discover our exclusive handcrafted collection' }}
+            {% endif %}
+        </span>
+    </div>
+</div>
+
+<!-- SECTION 2 — CATEGORY TABS -->
+<section class="category-tabs-wrapper">
+    <div class="container">
+        <div class="section-header-new">
+            <h2 data-i18n="shop_by_category">Shop by Category</h2>
+        </div>
+        <div class="category-tabs">
+            <div class="tab-item active" data-category="all">
+                <div class="tab-img-wrap">
+                    <img src="/static/images/categories/necklaces.png" alt="All">
+                </div>
+                <span class="tab-name" data-i18n="nav_shop_all">All</span>
+            </div>
+            <div class="tab-item" data-category="necklaces">
+                <div class="tab-img-wrap">
+                    <img src="/static/images/categories/necklaces.png" alt="Necklaces">
+                </div>
+                <span class="tab-name" data-i18n="nav_necklaces">Necklaces</span>
+            </div>
+            <div class="tab-item" data-category="earrings">
+                <div class="tab-img-wrap">
+                    <img src="/static/images/categories/earrings.png" alt="Earrings">
+                </div>
+                <span class="tab-name" data-i18n="nav_earrings">Earrings</span>
+            </div>
+            <div class="tab-item" data-category="rings">
+                <div class="tab-img-wrap">
+                    <img src="/static/images/categories/rings.png" alt="Rings">
+                </div>
+                <span class="tab-name" data-i18n="nav_rings">Rings</span>
+            </div>
+            <div class="tab-item" data-category="bracelets">
+                <div class="tab-img-wrap">
+                    <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=400" alt="Bracelets">
+                </div>
+                <span class="tab-name" data-i18n="nav_bracelets">Bracelets</span>
+            </div>
+            <div class="tab-item" data-category="sets">
+                <div class="tab-img-wrap">
+                    <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=400" alt="Sets">
+                </div>
+                <span class="tab-name" data-i18n="nav_sets">Sets</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 3 — ALL PRODUCTS (Grid) -->
+<section class="all-products container">
+    <div class="product-grid" id="homepage-product-grid">
+        {% for product in new_arrivals %}
+            {{ render_product_card(product, user_wishlist) }}
+        {% endfor %}
+    </div>
+</section>
+
+<!-- SECTION 4 — WHY CHOOSE US -->
+<section class="why-choose-us">
+    <div class="container">
+        <div class="section-header-new">
+            <h2 data-i18n="why_choose_us">Why Choose Us</h2>
+            <p class="section-subtitle" data-i18n="commitment_text">Our Commitment</p>
+        </div>
+        <p class="commitment-desc" data-i18n="commitment_desc">
+            We are dedicated to providing top-quality, stylish jewelry that ensures both comfort and elegance. Our unique designs and premium materials set us apart.
+        </p>
+        <div class="usp-grid">
+            <div class="usp-item">
+                <h3 data-i18n="usp_quality">Quality Craftsmanship</h3>
+                <p data-i18n="usp_quality_desc">Every piece is handcrafted with precision.</p>
+            </div>
+            <div class="usp-item">
+                <h3 data-i18n="usp_style">Stylish Designs</h3>
+                <p data-i18n="usp_style_desc">Modern aesthetics meets timeless luxury.</p>
+            </div>
+            <div class="usp-item">
+                <h3 data-i18n="usp_materials">Premium Materials</h3>
+                <p data-i18n="usp_materials_desc">Only the finest gold and stones are used.</p>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="/about" class="btn-secondary-new" data-i18n="learn_more">Learn More</a>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 5 — SPECIAL OFFERS (Limited Time) -->
+<section class="special-offers">
+    <div class="container special-content">
+        <span class="special-badge" data-i18n="limited_time">Limited Time Only</span>
+        <h2 class="special-title" data-i18n="special_offers">Special Offers</h2>
+        <p class="special-text" data-i18n="special_desc">Don't miss out on our exclusive promotions. Shop now for the best deals!</p>
+        <a href="/products/all" class="btn-primary-new" data-i18n="hero_cta">Shop Now</a>
+    </div>
+</section>
+
+<!-- SECTION 5.5 — FEATURED IMAGES -->
+<section class="featured-gallery container">
+    <div class="gallery-grid">
+        <div class="gallery-item">
+            <img src="/static/images/home/jewelry_1.png" alt="Luxury Necklace">
+            <div class="gallery-overlay">
+                <span data-i18n="nav_necklaces">Necklaces</span>
+            </div>
+        </div>
+        <div class="gallery-item">
+            <img src="/static/images/home/jewelry_2.png" alt="Diamond Earrings">
+            <div class="gallery-overlay">
+                <span data-i18n="nav_earrings">Earrings</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 5.8 — BEST SELLERS -->
+<section class="best-sellers container">
+    <div class="section-header-new">
+        <h2 data-i18n="best_sellers">Best Sellers</h2>
+    </div>
+    <div class="product-grid" id="homepage-bestsellers-grid">
+        {% for product in best_sellers %}
+            {{ render_product_card(product, user_wishlist) }}
+        {% endfor %}
+    </div>
+</section>
+
+<!-- SECTION 6 — ABOUT US (Story) -->
+<section class="about-story container">
+    <div class="about-story-grid">
+        <div class="about-story-content">
+            <h2 data-i18n="about_title">About Us</h2>
+            <p class="section-subtitle" data-i18n="our_story">Our Story</p>
+            <p data-i18n="story_text">
+                At ORYA, we are passionate about offering high-quality, handcrafted jewelry that combines style and comfort. Our goal is to provide jewelry lovers with a wide range of fashionable choices, all while ensuring the softest materials against your skin.
+            </p>
+            <a href="/about" class="btn-secondary-new" style="margin-top: 20px; display: inline-block;" data-i18n="learn_more">Learn More</a>
+        </div>
+        <div class="about-story-image">
+            <img src="{{ url_for('static', filename='images/logo/orya-logo.png') }}" alt="ORYA Jewelry">
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 6.5 — MASONRY COLLAGE (Wix Style) -->
+<section class="masonry-collage-wrapper container">
+    <div class="section-header-new">
+        <h2 data-i18n="explore_our_world">Explore Our World</h2>
+    </div>
+    <div class="masonry-grid">
+        <div class="masonry-item large">
+            <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=800" alt="Jewelry Lifestyle">
+        </div>
+        <div class="masonry-item">
+            <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=800" alt="Gold Rings">
+        </div>
+        <div class="masonry-item">
+            <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?q=80&w=800" alt="Luxury Necklace">
+        </div>
+        <div class="masonry-item wide">
+            <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=1200" alt="Elegant Bracelets">
+        </div>
+        <div class="masonry-item">
+            <img src="{{ url_for('static', filename='images/categories/earrings.png') }}" alt="Earrings Close-up">
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 7 — CONTACT US -->
+<section class="contact-us-home">
+    <div class="container">
+        <div class="section-header-new">
+            <h2 data-i18n="contact_us">Contact Us</h2>
+            <p class="section-subtitle" data-i18n="get_in_touch">Get in Touch</p>
+        </div>
+        <p class="contact-hint" data-i18n="contact_hint">Have a question or need assistance? Feel free to reach out to us. We're here to help!</p>
+        <div class="contact-details-home">
+            <p dir="ltr">{{ site_settings.whatsapp_number }}</p>
+            <p>orya.jewelry.store@gmail.com</p>
+        </div>
+    </div>
+</section>
+
+{% if current_ad_text %}
+<!-- PROMOTIONAL AD MODAL -->
+<div class="ad-modal-overlay" id="adModalOverlay" onclick="closeAdModal(event)">
+    <div class="ad-modal-container" id="adModalContainer" onclick="event.stopPropagation()">
+        <!-- Close Button -->
+        <button class="ad-close-btn" onclick="closeAdModalDirect()" aria-label="Close">&times;</button>
+
+        <!-- Transparent Text Overlay Sitting Exactly on the Cream Speech Bubble of the Background Image -->
+        <div class="ad-speech-bubble-overlay">
+            <span class="ad-bubble-subtitle"
+                  data-dynamic-ar="لدينا"
+                  data-dynamic-en="we have">
+                {% if session.get('lang', 'ar') == 'ar' %}لدينا{% else %}we have{% endif %}
+            </span>
+            <h1 class="ad-bubble-title"
+                data-dynamic-ar="{{ active_ann.text_ar if active_ann else current_ad_text }}"
+                data-dynamic-en="{{ active_ann.text_en if active_ann else current_ad_text }}">
+                {{ current_ad_text }}
+            </h1>
+            <span class="ad-bubble-desc"
+                  data-dynamic-ar="لنشاركها معكِ"
+                  data-dynamic-en="to share">
+                {% if session.get('lang', 'ar') == 'ar' %}لنشاركها معكِ{% else %}to share{% endif %}
+            </span>
+        </div>
+
+        <!-- Shop Now CTA Button at the bottom -->
+        <div class="ad-cta-container">
+            <a href="{{ ad_modal_link or '/products/all' }}" class="ad-cta-btn"
+               data-dynamic-ar="تسوقي الآن"
+               data-dynamic-en="Shop Now">
+                {% if session.get('lang', 'ar') == 'ar' %}تسوقي الآن{% else %}Shop Now{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+/* CSS Styling for Luxury Ad Modal using Canva background image */
+.ad-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    background: rgba(14, 6, 20, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.ad-modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.ad-modal-container {
+    position: relative;
+    width: 90%;
+    max-width: 440px;
+    height: 520px; /* Cropped to remove bottom watermark */
+    background-color: {{ dynamic_bg_color or '#8A74A0' }};
+    background-image: url("{{ url_for('static', filename='images/promotions/ad_modal_bg.png') }}");
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    border: 3px solid #FFF5E8;
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    transform: translateY(100vh);
+    transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.ad-modal-overlay.active .ad-modal-container {
+    transform: translateY(0);
+}
+
+/* Close Button */
+.ad-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 32px;
+    font-weight: 300;
+    cursor: pointer;
+    transition: color 0.3s ease, transform 0.3s ease;
+    z-index: 10;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+html[dir="rtl"] .ad-close-btn {
+    right: auto;
+    left: 20px;
+}
+
+.ad-close-btn:hover {
+    color: #FFF5E8;
+    transform: rotate(90deg);
+}
+
+/* Transparent Speech Bubble Overlay sitting exactly on the background cream bubble */
+.ad-speech-bubble-overlay {
+    position: absolute;
+    top: 15.5%;
+    left: 11%;
+    width: 78%;
+    height: 48%;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    z-index: 2;
+    box-sizing: border-box;
+}
+
+.ad-bubble-subtitle {
+    font-family: 'Cairo', 'DM Sans', sans-serif;
+    font-size: clamp(14px, 3.5vw, 17px);
+    text-transform: lowercase;
+    color: #2E1C4E; /* Deep Royal Canva Purple */
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.ad-bubble-title {
+    font-family: 'Cairo', 'DM Sans', sans-serif;
+    font-size: clamp(16px, 4vw, 21px);
+    font-weight: 800;
+    color: #F26743; /* Exact orange/rose from Canva text */
+    margin: 4px 0;
+    line-height: 1.35;
+    text-transform: uppercase;
+}
+
+.ad-bubble-desc {
+    font-family: 'Cairo', 'DM Sans', sans-serif;
+    font-size: clamp(14px, 3.5vw, 17px);
+    color: #2E1C4E; /* Deep Royal Canva Purple */
+    font-weight: 600;
+    margin-top: 6px;
+}
+
+/* CTA Button Container */
+.ad-cta-container {
+    position: absolute;
+    bottom: 8%;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 5;
+}
+
+.ad-cta-btn {
+    display: inline-block;
+    background: #FFF5E8;
+    color: #2E1C4E;
+    font-family: 'Cairo', 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 13px 45px;
+    border-radius: 50px;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    border: 2px solid transparent;
+}
+
+.ad-cta-btn:hover {
+    background: #2E1C4E;
+    color: #FFF5E8;
+    border-color: #FFF5E8;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(46, 28, 78, 0.3);
+}
+</style>
+
+<script>
+// --- Ad Modal Logic ---
+function showAdModal() {
+    const overlay = document.getElementById('adModalOverlay');
+    if (overlay) {
+        overlay.classList.add('active');
+    }
+}
+
+function closeAdModalDirect() {
+    const overlay = document.getElementById('adModalOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+}
+
+function closeAdModal(event) {
+    closeAdModalDirect();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (!sessionStorage.getItem('orya_home_ad_shown')) {
+        setTimeout(function() {
+            showAdModal();
+            sessionStorage.setItem('orya_home_ad_shown', 'true');
+        }, 800);
+    }
+});
+</script>
+{% endif %}
+
+{% endblock %}

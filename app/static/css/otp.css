@@ -1,0 +1,190 @@
+/* OTP Verification Page Styling - ORYA Luxury Jewelry */
+
+.otp-page-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    padding: 60px 20px;
+    background-color: var(--bg-alt, #FBF7F7);
+}
+
+.otp-card {
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+    border: 1px solid rgba(67, 54, 73, 0.06);
+    border-radius: 24px;
+    background: var(--white-warm, #FFFAF9);
+    padding: 48px 40px;
+    box-shadow: 0 20px 50px rgba(67, 54, 73, 0.05);
+    text-align: center;
+}
+
+.otp-logo {
+    margin-bottom: 30px;
+}
+
+.otp-title {
+    font-family: 'Playfair Display', 'Cormorant Garamond', serif;
+    font-size: 30px;
+    color: var(--accent-primary, #433649);
+    margin-bottom: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.otp-desc {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-muted, #666666);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.otp-email-highlight {
+    font-weight: 600;
+    color: var(--accent-primary, #433649);
+}
+
+.otp-inputs-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 35px 0;
+    direction: ltr; /* Ensure inputs remain LTR regardless of page dir */
+}
+
+.otp-digit-field {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid rgba(67, 54, 73, 0.15);
+    background-color: #FFFFFF;
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--accent-primary, #433649);
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    box-shadow: inset 0 2px 4px rgba(67, 54, 73, 0.02);
+}
+
+/* Active circle style from Figma */
+.otp-digit-field:focus {
+    border-color: #D4AF37; /* Luxury gold accent */
+    box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
+    transform: scale(1.08);
+}
+
+.otp-digit-field:disabled {
+    background-color: #F5F5F5;
+    border-color: rgba(67, 54, 73, 0.08);
+    cursor: not-allowed;
+}
+
+/* Remove default spin buttons for number inputs */
+.otp-digit-field::-webkit-outer-spin-button,
+.otp-digit-field::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.otp-digit-field[type=number] {
+    -moz-appearance: textfield;
+}
+
+.otp-submit-btn {
+    background: linear-gradient(135deg, var(--accent-primary, #433649) 0%, #2B2130 100%);
+    color: #FFFFFF;
+    border: 1px solid #D4AF37; /* Gold accent border */
+    border-radius: 30px;
+    padding: 15px 30px;
+    font-family: 'Montserrat', 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    width: 100%;
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    box-shadow: 0 8px 20px rgba(67, 54, 73, 0.15);
+    margin-bottom: 25px;
+}
+
+.otp-submit-btn:hover {
+    background: #D4AF37; /* Shifts to luxury gold on hover */
+    color: #FFFFFF;
+    border-color: #D4AF37;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(212, 175, 55, 0.3);
+}
+
+.otp-submit-btn:disabled {
+    background: #E5E0EB !important;
+    border-color: rgba(67, 54, 73, 0.1) !important;
+    color: rgba(67, 54, 73, 0.4) !important;
+    cursor: not-allowed;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.otp-timer-container {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: var(--text-muted, #666666);
+    margin-bottom: 20px;
+}
+
+.otp-countdown-val {
+    font-weight: 600;
+    color: #D4AF37; /* Gold countdown timer */
+}
+
+.otp-resend-trigger {
+    background: none;
+    border: none;
+    color: #D4AF37;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13.5px;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s;
+    padding: 4px 8px;
+}
+
+.otp-resend-trigger:hover {
+    color: #B28F2B;
+}
+
+.otp-back-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted, #666666);
+    text-decoration: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: all 0.3s;
+}
+
+.otp-back-nav:hover {
+    color: #D4AF37;
+    transform: translateX(-3px);
+}
+
+html[dir="rtl"] .otp-back-nav:hover {
+    transform: translateX(3px);
+}
+
+html[dir="rtl"] .otp-back-nav svg {
+    transform: rotate(180deg);
+}
+
+.otp-feedback-msg {
+    margin-top: 15px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+}

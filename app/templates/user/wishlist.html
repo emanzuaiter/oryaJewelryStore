@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}My Wishlist | ORYA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="account-page">
+    <div class="container">
+        
+        <div class="wishlist-header">
+            <h2 data-i18n="nav_wishlist">My Wishlist</h2>
+            <button class="btn-gold" id="btn-share-wishlist">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+                <span data-i18n="share_wishlist">Share Wishlist</span>
+            </button>
+        </div>
+
+        <div id="wishlist-grid" class="product-grid">
+            {% for item in wishlist_items %}
+            <article class="product-card" id="wish-{{ item.id }}">
+                <div class="product-image-wrap">
+                    <a href="/product/{{ item.id }}">
+                        <img src="{{ item.primary_image }}" alt="{{ item.name_ar if session.get('lang', 'ar') == 'ar' else item.name_en }}" class="product-img">
+                    </a>
+                    <button class="nav-icon-btn remove-wish-btn" data-id="{{ item.id }}" style="position: absolute; top: 10px; right: 10px; background: #fff; border-radius: 50%; width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; cursor: pointer;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                </div>
+                <div class="product-info" style="padding: 15px;">
+                    <h3 class="product-name" 
+                        data-name-ar="{{ item.name_ar }}" 
+                        data-name-en="{{ item.name_en }}"
+                        style="font-size: 15px; margin-bottom: 8px;">
+                        {{ item.name_ar if session.get('lang', 'ar') == 'ar' else item.name_en }}
+                    </h3>
+                    <div class="product-price">
+                        {% set currency_label = 'دينار' if session.get('lang', 'ar') == 'ar' else 'JOD' %}
+                        <span class="price-regular">{{ "{:,.3f}".format(item.price) }} <span data-i18n="price_currency">{{ currency_label }}</span></span>
+                    </div>
+                    <button class="btn-gold btn-full btn-add-cart" data-id="{{ item.id }}" style="margin-top: 15px; font-size: 13px; padding: 8px;" data-i18n="add_to_cart">
+                        Add to Cart
+                    </button>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        <div id="wishlist-empty" class="empty-state" style="{{ 'display: none;' if wishlist_items|length > 0 else '' }}">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <h3 data-i18n="cart_empty">Your wishlist is empty</h3>
+            <p style="color: #999; margin: 10px 0 30px;" data-i18n="hero_tagline">Start adding jewelry you love!</p>
+            <a href="/products/necklaces" class="btn-gold" data-i18n="hero_cta">Start Shopping</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    // --- 1. Remove from Wishlist ---
+    const grid = document.getElementById('wishlist-grid');
+    const emptyState = document.getElementById('wishlist-empty');
+
+    grid.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.remove-wish-btn');
+        if (!btn) return;
+
+        const productId = btn.dataset.id;
+        const card = document.getElementById(`wish-${productId}`);
+
+        try {
+            const res = await fetch(`/api/wishlist/${productId}`, { method: 'DELETE' });
+            if (res.ok) {
+                // Animate out
+                card.classList.add('card-fade-out');
+                setTimeout(() => {
+                    card.remove();
+                    if (grid.children.length === 0) {
+                        grid.style.display = 'none';
+                        emptyState.style.display = 'block';
+                    }
+                    // Update global count if needed
+                    const badge = document.getElementById('wishlist-count');
+                    if (badge) badge.textContent = parseInt(badge.textContent) - 1;
+                }, 500);
+            }
+        } catch (err) {
+            window.showToast('Error removing item', 'error');
+        }
+    });
+
+    // --- 2. Share Wishlist ---
+    const shareBtn = document.getElementById('btn-share-wishlist');
+    shareBtn.addEventListener('click', async () => {
+        try {
+            const res = await fetch('/api/wishlist/share-token');
+            const data = await res.json();
+            
+            if (data.token) {
+                const url = window.location.origin + '/wishlist/share/' + data.token;
+                await navigator.clipboard.writeText(url);
+                window.showToast(window.t('copied'), 'success');
+            }
+        } catch (err) {
+            window.showToast('Error generating link', 'error');
+        }
+    });
+
+    // --- 3. Add to Cart from Wishlist ---
+    grid.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-add-cart');
+        if (!btn) return;
+
+        const id = btn.dataset.id;
+        if (window.addToCart) {
+            window.addToCart(id, 1);
+        }
+    });
+
+})();
+</script>
+{% endblock %}

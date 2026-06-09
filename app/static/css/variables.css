@@ -1,0 +1,114 @@
+:root {
+    /* Typography - Geometric Sans & Clean Body */
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Inter', -apple-system, sans-serif;
+
+    /* Color Palette - Wix Template Inspired (Blush & Charcoal) */
+    --bg-main: #FFFFFF;
+    --bg-soft: #F2E8E8; /* Soft Blush Pink */
+    --bg-alt: #FBF7F7;  /* Even softer */
+    --white-warm: #FFFAF9;
+    --text-main: #000000;
+    --text-muted: #666666;
+    --charcoal: #333333;
+    --charcoal-light: #555555;
+    --accent-primary: #433649; /* Dark Plum / Charcoal */
+    --accent-hover: #5A4A61;
+    --accent-light: #F2E8E8;
+    --gold: #C9A96E;
+    --gold-dark: #A07840;
+    --gold-hover: #D4B67E;
+    --success: #2ecc71;
+    --error: #e74c3c;
+    --border: rgba(67, 54, 73, 0.08);
+    --border-color: rgba(67, 54, 73, 0.08);
+    --text-dark: #000000;
+    --gold-color: #C9A96E;
+    
+    /* Radii - Soft & Organic */
+    --radius-pill: 100px;
+    --radius-large: 50px;
+    --radius-small: 20px;
+    
+    /* Effects */
+    --shadow-soft: 0 5px 15px rgba(0,0,0,0.02);
+    --shadow-luxury: 0 15px 45px rgba(67, 54, 73, 0.08);
+    --glass: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --transition-luxury: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+
+    /* Z-index Stack */
+    --z-nav: 102;
+    --z-modal: 30;
+    --z-overlay: 199999;   /* cart overlay — above navbar & chatbot */
+    --z-drawer: 200000;    /* cart drawer — topmost element */
+    --z-chatbot: 99999;    /* chatbot icon */
+
+    /* Transitions */
+    --transition: 200ms ease;
+}
+
+/* Global Rules */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden; /* No horizontal scroll */
+    min-height: 100vh;
+}
+
+/* Minimum touch target - excluding small inputs like checkboxes/radios */
+button, 
+a, 
+input:not([type="checkbox"]):not([type="radio"]), 
+select, 
+textarea {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* Clickable elements cursor */
+button,
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+    cursor: pointer;
+}
+
+/* Transitions */
+* {
+    transition: all 200ms ease; /* Respecting the 150-300ms range */
+}
+
+/* Min font size mobile */
+@media (max-width: 768px) {
+    body {
+        font-size: 16px;
+    }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Image lazy loading helper */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}

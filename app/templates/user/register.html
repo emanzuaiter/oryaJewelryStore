@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Register | ORYA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card register-card">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo/orya-logo.png') }}" height="60" alt="ORYA">
+        </div>
+        
+        <h2 data-i18n="nav_register">Create Account</h2>
+
+        <form id="register-form">
+            <div class="form-group">
+                <input type="text" id="full_name" name="full_name" class="form-control" data-i18n="full_name_label" required>
+            </div>
+
+            <div class="form-group">
+                <input type="text" id="reg_username" name="username" class="form-control" data-i18n="username_label" required>
+                <span id="username-check" class="field-hint"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="email" id="email" name="email" class="form-control" data-i18n="email_label" required>
+                <span id="email-check" class="field-hint"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="tel" id="phone" name="phone" class="form-control" placeholder="07XXXXXXXX" data-i18n-placeholder="phone_label" required>
+                <span id="phone-hint" class="field-hint" style="color: #999;">Format: 07XXXXXXXX</span>
+            </div>
+
+            <div class="form-group">
+                <input type="password" id="reg_password" name="password" class="form-control" data-i18n="password_label" required>
+                <div class="strength-meter">
+                    <div id="strength-bar" class="strength-bar"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="password" id="confirm_password" name="confirm_password" class="form-control" data-i18n="confirm_password_label" required>
+                <span id="match-check" class="field-hint"></span>
+            </div>
+
+            <button type="submit" class="btn-gold btn-full" id="register-submit">
+                <span data-i18n="nav_register">Create Account</span>
+            </button>
+            
+            <div id="register-error" class="field-error" style="margin-top: 15px; display: none; text-align: center;"></div>
+        </form>
+
+        <div class="auth-divider">
+            <span data-i18n="or_text">OR</span>
+        </div>
+
+        <div class="auth-footer">
+            <p data-i18n="has_account" style="color: var(--text-muted); font-size: 14px;">Already have an account?</p>
+            <a href="/login" class="btn-outline btn-full" style="margin-top: 15px; display: block;" data-i18n="nav_login">Login</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const form = document.getElementById('register-form');
+    const usernameInput = document.getElementById('reg_username');
+    const emailInput = document.getElementById('email');
+    const phoneInput = document.getElementById('phone');
+    const passwordInput = document.getElementById('reg_password');
+    const confirmInput = document.getElementById('confirm_password');
+    const strengthBar = document.getElementById('strength-bar');
+
+    // Debounce Helper
+    const debounce = (fn, delay) => {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn(...args), delay);
+        };
+    };
+
+    // Live Check Username
+    const checkUsername = debounce(async (val) => {
+        if (val.length < 3) return;
+        const res = await fetch(`/check-username/${val}`);
+        const data = await res.json();
+        const hint = document.getElementById('username-check');
+        hint.textContent = data.available ? '✓ available' : '✗ taken';
+        hint.className = 'field-hint ' + (data.available ? 'field-success' : 'field-error');
+    }, 500);
+
+    usernameInput.addEventListener('input', (e) => checkUsername(e.target.value));
+
+    // Live Check Email
+    const checkEmail = debounce(async (val) => {
+        if (!val.includes('@')) return;
+        const res = await fetch(`/check-email/${val}`);
+        const data = await res.json();
+        const hint = document.getElementById('email-check');
+        hint.textContent = data.available ? '✓ available' : '✗ already registered';
+        hint.className = 'field-hint ' + (data.available ? 'field-success' : 'field-error');
+    }, 500);
+
+    emailInput.addEventListener('input', (e) => checkEmail(e.target.value));
+
+    // Phone Validation
+    phoneInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        const regex = /^07[789]\d{7}$/;
+        const hint = document.getElementById('phone-hint');
+        if (val === '') {
+            hint.textContent = 'Format: 07XXXXXXXX';
+            hint.style.color = '#999';
+        } else if (regex.test(val)) {
+            hint.textContent = '✓ Valid format';
+            hint.className = 'field-hint field-success';
+        } else {
+            hint.textContent = '✗ Invalid format (e.g. 07XXXXXXXX)';
+            hint.className = 'field-hint field-error';
+        }
+    });
+
+    // Password Strength
+    passwordInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        let strength = 0;
+        if (val.length >= 8) strength++;
+        if (/[A-Z]/.test(val)) strength++;
+        if (/[0-9]/.test(val)) strength++;
+        if (/[^A-Za-z0-9]/.test(val)) strength++;
+
+        strengthBar.className = 'strength-bar';
+        if (val === '') strengthBar.style.width = '0';
+        else if (strength === 1) strengthBar.classList.add('strength-weak');
+        else if (strength === 2) strengthBar.classList.add('strength-fair');
+        else if (strength === 3) strengthBar.classList.add('strength-good');
+        else strengthBar.classList.add('strength-strong');
+    });
+
+    // Match Password
+    const checkMatch = () => {
+        const matchHint = document.getElementById('match-check');
+        if (confirmInput.value === '') {
+            matchHint.textContent = '';
+        } else if (confirmInput.value === passwordInput.value) {
+            matchHint.textContent = '✓ Matches';
+            matchHint.className = 'field-hint field-success';
+        } else {
+            matchHint.textContent = '✗ Does not match';
+            matchHint.className = 'field-hint field-error';
+        }
+    };
+
+    confirmInput.addEventListener('input', checkMatch);
+    passwordInput.addEventListener('input', checkMatch);
+
+    // Form Submit
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errorDiv = document.getElementById('register-error');
+        errorDiv.style.display = 'none';
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        if (data.password !== data.confirm_password) {
+            errorDiv.textContent = 'Passwords do not match';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        try {
+            const res = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                const responseData = await res.json();
+                window.location.href = responseData.redirect || '/';
+            } else {
+                const err = await res.json();
+                errorDiv.textContent = err.message || 'Registration failed';
+                errorDiv.style.display = 'block';
+            }
+        } catch (error) {
+            errorDiv.textContent = 'An error occurred';
+            errorDiv.style.display = 'block';
+        }
+    });
+})();
+</script>
+{% endblock %}

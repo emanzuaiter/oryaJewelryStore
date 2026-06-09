@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'بيان الوصول' if session.get('lang', 'ar') == 'ar' else 'Accessibility Statement' }} | ORYA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .policy-hero {
+        padding: 80px 0;
+        background: var(--bg-soft);
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+    }
+    .policy-hero h1 {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        color: var(--text-dark);
+        margin: 0;
+    }
+    .policy-body {
+        padding: 60px 0;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .policy-content {
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        line-height: 1.8;
+        color: var(--text-main);
+    }
+    .policy-content h2 {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        color: var(--gold);
+        border-bottom: 1px solid var(--bg-soft);
+        padding-bottom: 10px;
+    }
+    [dir="rtl"] .policy-content {
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="policy-hero">
+    <div class="container">
+        <h1 data-i18n="accessibility_statement">Accessibility Statement</h1>
+    </div>
+</section>
+
+<section class="policy-body">
+    <div class="container">
+        <div class="policy-content">
+            {% if session.get('lang', 'ar') == 'ar' %}
+                <h2>بيان الوصول</h2>
+                <p>نحن في أوريا نؤمن بأن الجمال والفخامة يجب أن تكون متاحة للجميع. نحن ملتزمون بضمان إمكانية الوصول إلى موقعنا الإلكتروني لجميع المستخدمين، بغض النظر عن القدرة أو التكنولوجيا.</p>
+                <h3>جهودنا</h3>
+                <p>نعمل باستمرار على تحسين سهولة الاستخدام والوصول لموقعنا من خلال اتباع المعايير الدولية لتصميم الويب الشامل.</p>
+                <h3>ملاحظاتكم</h3>
+                <p>إذا واجهتِ أي صعوبة في الوصول إلى أي جزء من موقعنا، يرجى التواصل معنا عبر البريد الإلكتروني وسنكون سعداء بمساعدتكِ.</p>
+            {% else %}
+                <h2>Accessibility Statement</h2>
+                <p>At ORYA, we believe that beauty and luxury should be accessible to everyone. We are committed to ensuring our website is accessible to all users, regardless of ability or technology.</p>
+                <h3>Our Efforts</h3>
+                <p>We are continuously working to improve the usability and accessibility of our website by following international standards for inclusive web design.</p>
+                <h3>Feedback</h3>
+                <p>If you experience any difficulty accessing any part of our website, please contact us via email, and we will be happy to assist you.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

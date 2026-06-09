@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders - ORYA Jewels{% endblock %}
+
+{% block content %}
+<section class="orders-section section-padding">
+    <div class="container">
+        <h1 class="section-title text-center" data-i18n="my_orders_title">My Orders</h1>
+        
+        <div class="orders-list" style="max-width: 800px; margin: 40px auto 0;">
+            {% if orders %}
+                {% for order in orders %}
+                    <div class="order-card card" style="background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; overflow: hidden;">
+                        <div class="order-header" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-soft);">
+                            <div>
+                                <div style="font-weight: 700; font-size: 16px;">Order #{{ order.display_id }}</div>
+                                <div style="font-size: 13px; color: var(--text-muted);">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="status-badge" data-i18n="order_status_{{ order.status }}" style="display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; text-transform: uppercase; 
+                                    {% if order.status == 'delivered' %} background: #d4edda; color: #155724;
+                                    {% elif order.status == 'cancelled' %} background: #f8d7da; color: #721c24;
+                                    {% else %} background: #fff3cd; color: #856404; {% endif %}">
+                                    {% if session.get('lang', 'ar') == 'ar' %}
+                                        {{ 'قيد الانتظار' if order.status == 'pending' else ('جاري التجهيز' if order.status == 'processing' else ('تم التوصيل' if order.status == 'delivered' else 'ملغي')) }}
+                                    {% else %}
+                                        {{ order.status|capitalize }}
+                                    {% endif %}
+                                </div>
+                                <div style="font-weight: 700; color: var(--gold); margin-top: 4px;">{{ order.total_jod|round(3) }} <span data-i18n="price_currency">{{ 'دينار' if session.get('lang', 'ar') == 'ar' else 'JOD' }}</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="order-details" style="padding: 20px; border-top: 1px solid var(--border);">
+                            <h4 style="font-size: 14px; margin-bottom: 15px;" data-i18n="order_items">Order Items</h4>
+                            <div class="order-items-grid">
+                                {% for item in order.items %}
+                                    <div class="order-item-row" style="display: flex; align-items: center; gap: 15px; padding: 10px 0; border-bottom: 1px dotted var(--border);">
+                                        <img src="{{ item.product.primary_image }}" alt="Product" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
+                                        <div style="flex: 1;">
+                                            <div style="font-size: 14px; font-weight: 500;">
+                                                {% if session['lang'] == 'ar' %} {{ item.product.name_ar }} {% else %} {{ item.product.name_en }} {% endif %}
+                                            </div>
+                                            <div style="font-size: 12px; color: var(--text-muted);">
+                                                <span data-i18n="qty">{{ 'الكمية' if session.get('lang', 'ar') == 'ar' else 'Qty' }}</span>: {{ item.quantity }} × {{ item.unit_price_jod|round(3) }} <span data-i18n="price_currency">{{ 'دينار' if session.get('lang', 'ar') == 'ar' else 'JOD' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="shipping-info-summary" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border); font-size: 13px; display: flex; justify-content: space-between; align-items: flex-end;">
+                                <p><strong data-i18n="address_label">{{ 'العنوان:' if session.get('lang', 'ar') == 'ar' else 'Address:' }}</strong> {{ order.city }}, {{ order.area }}, {{ order.address }}</p>
+                                
+                                {% if order.status == 'pending' %}
+                                    <button class="btn-outline cancel-order-btn" data-order-id="{{ order.id }}" style="color: var(--error); border-color: var(--error); padding: 5px 15px; font-size: 12px;" data-i18n="cancel_order">
+                                        Cancel Order
+                                    </button>
+                                {% endif %}
+                            </div>
+ 
+                            {# ── Price Breakdown ─────────────────────── #}
+                            <div style="margin-top: 16px; padding: 14px 16px; background: var(--bg-soft); border-radius: 10px; font-size: 13px;">
+                                {% set currency_label = 'دينار' if session.get('lang', 'ar') == 'ar' else 'JOD' %}
+                                <div style="display:flex; justify-content:space-between; padding: 5px 0; color: var(--text-muted);">
+                                    <span data-i18n="subtotal">Subtotal</span>
+                                    <span>{{ order.subtotal_jod|round(3) }} <span data-i18n="price_currency">{{ currency_label }}</span></span>
+                                </div>
+ 
+                                {% if order.coupon_code and order.discount_jod and order.discount_jod > 0 %}
+                                <div style="display:flex; justify-content:space-between; padding: 5px 0; color: #16a34a; font-weight: 600;">
+                                    <span>
+                                        🎫 <span data-i18n="coupon_label">{{ 'كوبون' if session.get('lang', 'ar') == 'ar' else 'Coupon' }}</span>
+                                        <span style="background:#dcfce7; color:#15803d; border-radius:6px; padding:1px 8px; font-size:11px; margin-inline-start:4px;">
+                                            {{ order.coupon_code }}
+                                        </span>
+                                    </span>
+                                    <span>- {{ order.discount_jod|round(3) }} <span data-i18n="price_currency">{{ currency_label }}</span></span>
+                                </div>
+                                {% endif %}
+ 
+                                <div style="display:flex; justify-content:space-between; padding: 5px 0; color: var(--text-muted);">
+                                    <span data-i18n="delivery_fee">Delivery Fee</span>
+                                    <span>{{ order.delivery_fee_jod|round(3) }} <span data-i18n="price_currency">{{ currency_label }}</span></span>
+                                </div>
+ 
+                                <div style="display:flex; justify-content:space-between; padding: 8px 0 4px; border-top: 1px solid var(--border); margin-top: 6px; font-weight: 700; font-size: 14px; color: var(--gold);">
+                                    <span data-i18n="total">Total</span>
+                                    <span>{{ order.total_jod|round(3) }} <span data-i18n="price_currency">{{ currency_label }}</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state text-center" style="padding: 60px 20px;">
+                    <p data-i18n="no_orders">You haven't placed any orders yet.</p>
+                    <a href="/products/all" class="btn-gold" style="margin-top:20px; display: inline-block;" data-i18n="shop_now">Shop Now</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const cancelBtns = document.querySelectorAll('.cancel-order-btn');
+    
+    cancelBtns.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const orderId = btn.dataset.orderId;
+            const confirmMsg = window.currentLang === 'ar' ? 'هل أنت متأكد من إلغاء هذا الطلب؟' : 'Are you sure you want to cancel this order?';
+            
+            if (confirm(confirmMsg)) {
+                try {
+                    const response = await fetch(`/api/orders/cancel/${orderId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        window.showToast(result.message, 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        window.showToast(result.message, 'error');
+                    }
+                } catch (err) {
+                    console.error('Cancel order error:', err);
+                    window.showToast('Something went wrong', 'error');
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

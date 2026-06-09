@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="{{ session.get('lang', 'ar') }}" dir="{{ 'rtl' if session.get('lang', 'ar') == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ORYA Admin{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/icon with out back.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/icon with out back.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body">
+
+  <!-- Mobile overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ═══════════════════════════════════════════
+       SIDEBAR
+  ════════════════════════════════════════════ -->
+  <aside class="admin-sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+      <img src="{{ url_for('static', filename='images/logo/orya-logo-white.png') }}"
+           alt="ORYA" class="sidebar-logo"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <span class="sidebar-logo-text" style="display:none">ORYA</span>
+      <span class="sidebar-admin-tag">Admin</span>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <!-- لوحة التحكم -->
+      <a href="/admin/dashboard"
+         class="nav-item {% if active == 'dashboard' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        <span data-i18n="admin_dashboard">لوحة التحكم</span>
+      </a>
+
+      <!-- المنتجات -->
+      <a href="/admin/products"
+         class="nav-item {% if active == 'products' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        <span data-i18n="admin_products">المنتجات</span>
+      </a>
+
+      <!-- الطلبات -->
+      <a href="/admin/orders"
+         class="nav-item {% if active == 'orders' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+        <span data-i18n="admin_orders">الطلبات</span>
+        {% if pending_count is defined and pending_count > 0 %}
+        <span class="nav-badge">{{ pending_count }}</span>
+        {% endif %}
+      </a>
+
+      <!-- العملاء -->
+      <a href="/admin/customers"
+         class="nav-item {% if active == 'customers' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+          <path d="M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+        <span data-i18n="admin_customers">العملاء</span>
+      </a>
+
+      <!-- التقييمات -->
+      <a href="/admin/reviews"
+         class="nav-item {% if active == 'reviews' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        <span data-i18n="admin_reviews">التقييمات</span>
+      </a>
+
+      <!-- الكوبونات -->
+      <a href="/admin/coupons"
+         class="nav-item {% if active == 'coupons' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
+          <line x1="7" y1="7" x2="7.01" y2="7"/>
+        </svg>
+        <span data-i18n="admin_coupons">الكوبونات</span>
+      </a>
+
+      <!-- التخفيضات -->
+      <a href="/admin/discounts"
+         class="nav-item {% if active == 'discounts' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="5" x2="5" y2="19"/>
+          <circle cx="6.5" cy="6.5" r="2.5"/>
+          <circle cx="17.5" cy="17.5" r="2.5"/>
+        </svg>
+        <span data-i18n="admin_discounts">التخفيضات</span>
+      </a>
+
+      <!-- الإعلانات -->
+      <a href="/admin/announcements"
+         class="nav-item {% if active == 'announcements' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 01-3.46 0"/>
+        </svg>
+        <span data-i18n="admin_announcements">الإعلانات</span>
+      </a>
+
+      <!-- سجل الشات -->
+      <a href="/admin/chatbot"
+         class="nav-item {% if active == 'chatbot' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        <span data-i18n="admin_chatbot">سجل الشات</span>
+      </a>
+
+      <!-- إدارة المدراء -->
+      {% if current_user.role == 'super_admin' %}
+      <a href="/admin/admins"
+         class="nav-item {% if active == 'admins' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span data-i18n="admin_managers">إدارة المدراء</span>
+      </a>
+      {% endif %}
+
+      <!-- الإعدادات -->
+      <a href="/admin/settings"
+         class="nav-item {% if active == 'settings' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1V15a2 2 0 01-2-2 2 2 0 012-2v-.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2v.09a1.65 1.65 0 00-1.6 1.51z"/>
+        </svg>
+        <span data-i18n="admin_settings">إعدادات المتجر</span>
+      </a>
+
+      <div class="nav-separator"></div>
+
+      <!-- خروج -->
+      <a href="/admin/logout" class="nav-item nav-logout">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span data-i18n="admin_logout">خروج</span>
+      </a>
+
+    </nav>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN AREA
+  ════════════════════════════════════════════ -->
+  <div class="admin-main" id="admin-main">
+
+    <!-- Top Header -->
+    <header class="admin-header" style="background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); padding: 10px 24px; display: flex; justify-content: space-between; align-items: center;">
+      <button class="sidebar-toggle" id="sidebar-toggle" aria-label="فتح القائمة">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+
+      <div class="admin-header-right" style="display: flex; align-items: center; gap: 20px;">
+        <!-- Language Switcher -->
+        <div class="header-action-wrap">
+          <button class="header-action-btn lang-toggle-btn" 
+                  onclick="setAdminLanguage('{{ 'en' if session.get('lang', 'ar') == 'ar' else 'ar' }}')"
+                  style="background: #F4F7FE; border: none; padding: 8px 15px; border-radius: 12px; font-weight: 700; color: var(--admin-text-main); cursor: pointer; font-size: 13px;">
+            {{ 'English' if session.get('lang', 'ar') == 'ar' else 'العربية' }}
+          </button>
+        </div>
+
+        <a href="/" target="_blank" rel="noopener" class="view-site-btn" data-i18n="view_store" style="border-radius: 20px; background: var(--admin-sidebar); color: #FFF; border: none; padding: 8px 18px; font-size: 13px; text-decoration: none; font-weight: 600; box-shadow: 0 4px 10px rgba(67, 54, 73, 0.2);">
+           View Store ↗
+        </a>
+
+        <!-- Notifications -->
+        <div class="header-action-wrap" style="position: relative;">
+          <button class="header-action-btn" id="notif-toggle" style="background: #F4F7FE; border: none; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--admin-text-muted); cursor: pointer; transition: all 0.3s ease;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+            </svg>
+            {% if unread_notifications_count > 0 %}
+            <span style="position: absolute; top: -2px; right: -2px; width: 16px; height: 16px; background: #FF5C5C; border: 2px solid #FFF; border-radius: 50%; color: white; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+              {{ unread_notifications_count }}
+            </span>
+            {% endif %}
+          </button>
+          <div class="header-dropdown" id="notif-dropdown" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 10px; width: 320px; background: #FFF; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); z-index: 100; padding: 15px;">
+            <div style="font-weight: 700; margin-bottom: 10px; color: var(--admin-text-main); display: flex; justify-content: space-between;">
+              <span data-i18n="admin_notifications_title">Notifications</span>
+              <a href="/admin/notifications/read-all" data-i18n="mark_all_read" style="font-size: 11px; color: var(--admin-accent); text-decoration: none;">Mark all read</a>
+            </div>
+            <div class="notif-list" style="max-height: 300px; overflow-y: auto;">
+              {% if admin_notifications %}
+                {% for n in admin_notifications %}
+                <div style="padding: 10px; border-bottom: 1px solid #F4F7FE; position: relative;">
+                  <a href="/admin/notifications/{{ n.id }}/read" style="text-decoration: none; display: block;">
+                    <div style="font-size: 13px; color: var(--admin-text-main); line-height: 1.4;">{{ n.message }}</div>
+                    <div style="font-size: 11px; color: var(--admin-text-muted); margin-top: 4px;">{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                  </a>
+                  {% if not n.is_read %}
+                  <span style="position: absolute; top: 12px; right: 5px; width: 6px; height: 6px; background: var(--admin-accent); border-radius: 50%;"></span>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              {% else %}
+                <div style="font-size: 13px; color: var(--admin-text-muted); text-align: center; padding: 20px;" data-i18n="no_new_notifications">No new notifications</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- User Profile -->
+        <div class="header-action-wrap" style="position: relative;">
+          <button class="user-circle-btn" id="user-menu-toggle" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--admin-accent), #B5955B); color: #FFF; border: 3px solid #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;">
+            {{ current_user.username[0].upper() if current_user.is_authenticated else 'A' }}
+          </button>
+          <div class="header-dropdown" id="user-dropdown" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 10px; width: 220px; background: #FFF; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); z-index: 100; overflow: hidden;">
+            <div style="padding: 15px; border-bottom: 1px solid #F4F7FE;">
+              <div style="font-weight: 700; color: var(--admin-text-main);">{{ current_user.username if current_user.is_authenticated else 'Admin' }}</div>
+              <div style="font-size: 12px; color: var(--admin-text-muted);" data-i18n="role_admin">Administrator</div>
+            </div>
+            <a href="/admin/settings" data-i18n="admin_profile" style="display: block; padding: 12px 15px; color: var(--admin-text-main); text-decoration: none; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#F4F7FE'" onmouseout="this.style.background='transparent'">My Profile</a>
+            <a href="/admin/logout" style="display: block; padding: 12px 15px; color: #FF5C5C; text-decoration: none; font-size: 14px; border-top: 1px solid #F4F7FE; transition: background 0.2s;" onmouseover="this.style.background='#FFF5F5'" onmouseout="this.style.background='transparent'" data-i18n="admin_logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">
+              {{ message }}
+              <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Page Content -->
+    <main class="admin-content">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div><!-- /admin-main -->
+
+  <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/lang.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

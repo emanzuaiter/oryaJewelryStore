@@ -1,0 +1,196 @@
+{% extends "admin/base_admin.html" %}
+{% set active = 'announcements' %}
+
+{% block title %}الإعلانات — ORYA Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title" data-i18n="admin_announcements">إدارة الإعلانات</h1>
+    <p class="page-subtitle" data-i18n="admin_announcements_subtitle">أشرطة الإعلانات العلوية للمتجر </p>
+  </div>
+  <button class="btn btn-gold" onclick="toggleAnnouncementForm()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    <span data-i18n="add_announcement">إضافة إعلان</span>
+  </button>
+</div>
+
+<!-- Inline Form (Initially hidden) -->
+<div id="ann-form-container" class="form-section" style="display: none; margin-bottom: 30px; border: 1px solid var(--gold-light); background: rgba(201, 169, 110, 0.05);">
+  <h3 class="form-section-title" id="form-title" data-i18n="add_new_announcement">إضافة إعلان جديد</h3>
+  <form id="ann-form">
+    <input type="hidden" id="ann-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="text_ar_label">النص (عربي)</span> <span class="required">*</span></label>
+        <input type="text" class="form-input" id="text_ar" required placeholder="مثال: خصم 15% على جميع الخواتم!">
+      </div>
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="text_en_label">النص (إنجليزي)</span> <span class="required">*</span></label>
+        <input type="text" class="form-input" id="text_en" required placeholder="15% off on all rings!" dir="ltr">
+      </div>
+    </div>
+    <div class="form-row three">
+      <div class="form-group">
+        <label class="form-label" data-i18n="bg_color_label">لون الخلفية</label>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <input type="color" id="bg_color" value="#C9A96E" style="height: 40px; width: 60px; padding: 2px; border: 1px solid var(--border); border-radius: 4px;">
+          <span style="font-size: 13px; font-family: monospace;" id="color-hex">#C9A96E</span>
+        </div>
+      </div>
+      <div class="form-group" style="flex: 2;">
+        <label class="form-label" data-i18n="redirect_link_label">رابط التوجيه (اختياري)</label>
+        <input type="url" class="form-input" id="link" placeholder="https://example.com/collection" dir="ltr">
+      </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+      <div class="toggle-group">
+        <span class="toggle-label" data-i18n="status_active">نشط</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="is_active">
+          <span class="toggle-slider"></span>
+        </label>
+        <span style="font-size: 11px; color: rgba(0,0,0,0.5); margin-right: 12px;" data-i18n="ann_limit_note">* يمكن تفعيل إعلان واحد فقط في نفس الوقت</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="toggleAnnouncementForm()" data-i18n="cancel">إلغاء</button>
+        <button type="submit" class="btn btn-gold btn-sm" data-i18n="save_announcement">حفظ الإعلان</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Table -->
+<div class="table-card">
+  <div id="ann-table-wrap">
+    <div class="loading-row"><div class="spinner"></div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadAnnouncements() {
+  const wrap = document.getElementById('ann-table-wrap');
+  wrap.innerHTML = '<div class="loading-row"><div class="spinner"></div></div>';
+  try {
+    const data = await Admin.adminFetch('/admin/api/announcements');
+    const anns = data.announcements || [];
+    if (anns.length === 0) {
+      wrap.innerHTML = '<div class="table-empty">لا توجد إعلانات حالياً</div>';
+      return;
+    }
+    wrap.innerHTML = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th data-i18n="table_text">${t('table_text')}</th>
+            <th data-i18n="table_color">${t('table_color')}</th>
+            <th data-i18n="table_link">${t('table_link')}</th>
+            <th data-i18n="table_active">${t('table_active')}</th>
+            <th data-i18n="table_actions">${t('table_actions')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${anns.map(a => `
+            <tr>
+              <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${currentLang === 'ar' ? a.text_ar : a.text_en}</td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 20px; height: 20px; border-radius: 4px; background: ${a.bg_color}; border: 1px solid rgba(0,0,0,0.1);"></div>
+                  <span style="font-family: monospace; font-size: 12px;">${a.bg_color}</span>
+                </div>
+              </td>
+              <td>${a.link ? `<a href="${a.link}" target="_blank" style="font-size: 11px; color: var(--gold); text-decoration: underline;" data-i18n="open_link">${t('open_link')}</a>` : '—'}</td>
+              <td>
+                <button class="btn-icon ${a.is_active ? 'primary' : ''}" onclick="toggleActive(${a.id}, ${!a.is_active})">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    ${a.is_active ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/>'}
+                  </svg>
+                </button>
+              </td>
+              <td>
+                <div class="table-actions">
+                  <button class="btn-icon primary" onclick='editAnnouncement(${JSON.stringify(a)})'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                  <button class="btn-icon danger" onclick="deleteAnnouncement(${a.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (e) { Admin.showToast('فشل تحميل الإعلانات', 'error'); }
+}
+
+function toggleAnnouncementForm() {
+  const container = document.getElementById('ann-form-container');
+  const isHidden = container.style.display === 'none';
+  container.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) {
+    document.getElementById('form-title').textContent = t('add_new_announcement');
+    document.getElementById('ann-id').value = '';
+    document.getElementById('ann-form').reset();
+    document.getElementById('bg_color').value = '#C9A96E';
+    document.getElementById('color-hex').textContent = '#C9A96E';
+  }
+}
+
+document.getElementById('bg_color').oninput = function() {
+  document.getElementById('color-hex').textContent = this.value.toUpperCase();
+};
+
+document.getElementById('ann-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('ann-id').value;
+  const payload = {
+    text_ar: document.getElementById('text_ar').value,
+    text_en: document.getElementById('text_en').value,
+    bg_color: document.getElementById('bg_color').value,
+    link: document.getElementById('link').value || null,
+    is_active: document.getElementById('is_active').checked
+  };
+  try {
+    const url = id ? `/admin/api/announcements/${id}` : '/admin/api/announcements';
+    await Admin.adminFetch(url, { method: id ? 'PUT' : 'POST', body: payload });
+    Admin.showToast('تم حفظ الإعلان بنجاح', 'success');
+    toggleAnnouncementForm();
+    loadAnnouncements();
+  } catch (e) { Admin.showToast(e.message, 'error'); }
+};
+
+function editAnnouncement(a) {
+  document.getElementById('form-title').textContent = t('edit_announcement_title');
+  document.getElementById('ann-id').value = a.id;
+  document.getElementById('text_ar').value = a.text_ar;
+  document.getElementById('text_en').value = a.text_en;
+  document.getElementById('bg_color').value = a.bg_color;
+  document.getElementById('color-hex').textContent = a.bg_color;
+  document.getElementById('link').value = a.link || '';
+  document.getElementById('is_active').checked = a.is_active;
+  document.getElementById('ann-form-container').style.display = 'block';
+}
+
+async function toggleActive(id, status) {
+  try {
+    await Admin.adminFetch(`/admin/api/announcements/${id}`, { method: 'PUT', body: { is_active: status } });
+    Admin.showToast('تم تحديث حالة الإعلان', 'success');
+    loadAnnouncements();
+  } catch (e) { Admin.showToast(e.message, 'error'); }
+}
+
+async function deleteAnnouncement(id) {
+  Admin.showConfirm(t('confirm_delete_announcement') || 'Delete this announcement?', async () => {
+    try {
+      await Admin.adminFetch(`/admin/api/announcements/${id}`, { method: 'DELETE' });
+      Admin.showToast(t('announcement_deleted_success') || 'Deleted successfully', 'success');
+      loadAnnouncements();
+    } catch (e) { Admin.showToast(e.message, 'error'); }
+  }, t('Delete') || 'حذف');
+}
+
+loadAnnouncements();
+</script>
+{% endblock %}

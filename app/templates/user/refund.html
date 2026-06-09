@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'سياسة الاسترجاع' if session.get('lang', 'ar') == 'ar' else 'Refund Policy' }} | ORYA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .policy-hero {
+        padding: 80px 0;
+        background: var(--bg-soft);
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+    }
+    .policy-hero h1 {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        color: var(--text-dark);
+        margin: 0;
+    }
+    .policy-body {
+        padding: 60px 0;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .policy-content {
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        line-height: 1.8;
+        color: var(--text-main);
+    }
+    .policy-content h2 {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        color: var(--gold);
+        border-bottom: 1px solid var(--bg-soft);
+        padding-bottom: 10px;
+    }
+    .policy-content ul {
+        padding-inline-start: 20px;
+        margin-bottom: 20px;
+    }
+    .policy-content li {
+        margin-bottom: 10px;
+    }
+    [dir="rtl"] .policy-content {
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="policy-hero">
+    <div class="container">
+        <h1 data-i18n="refund_policy">Refund Policy</h1>
+    </div>
+</section>
+
+<section class="policy-body">
+    <div class="container">
+        <div class="policy-content">
+            {% if session.get('lang', 'ar') == 'ar' %}
+                <h2>سياسة الإرجاع والاستبدال</h2>
+                <p>نحن في أوريا نهتم برضاكِ التام، ومع ذلك، نظراً لطبيعة المنتجات وحرصاً على السلامة العامة، نتبع السياسة التالية:</p>
+                <ul>
+                    <li><strong>مدة الإرجاع:</strong> يمكن طلب الإرجاع خلال 3 أيام فقط من تاريخ استلام الطلب.</li>
+                    <li><strong>حالة المنتج:</strong> يجب أن تكون القطعة في حالتها الأصلية تماماً، دون وجود أي تلف، خدوش، أو آثار استخدام.</li>
+                    <li><strong>العبوة:</strong> يجب إعادة المنتج في تغليفه الأصلي كاملاً.</li>
+                    <li><strong>رسوم الإرجاع:</strong> يتم خصم 10% من سعر المنتج كرسوم إدارية وعمليات إرجاع.</li>
+                    <li><strong>كيفية البدء:</strong> يرجى التواصل معنا عبر واتساب (0780216168) لإرسال طلب الإرجاع.</li>
+                </ul>
+                <p>هدفنا الدائم هو توفير تجربة تسوق راقية تضمن لكِ الحصول على قطعة مجوهرات تدوم طويلاً وتمنحكِ البريق الذي تستحقينه.</p>
+            {% else %}
+                <h2>Return & Exchange Policy</h2>
+                <p>At ORYA, your satisfaction is our priority. However, due to the nature of our products and for public health and safety reasons, we follow this policy:</p>
+                <ul>
+                    <li><strong>Return Period:</strong> Returns can be requested within 3 days only from the date of receiving the order.</li>
+                    <li><strong>Item Condition:</strong> The piece must be in its original condition, with no damage, scratches, or signs of use.</li>
+                    <li><strong>Packaging:</strong> The product must be returned in its full original packaging.</li>
+                    <li><strong>Return Fees:</strong> A fee of 10% of the product price will be deducted as administrative and processing fees.</li>
+                    <li><strong>How to Initiate:</strong> Please contact us via WhatsApp (0780216168) to submit a return request.</li>
+                </ul>
+                <p>Our mission is to provide a premium shopping experience that ensures you receive a long-lasting piece of jewelry that gives you the sparkle you deserve.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Code | ORYA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/otp.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="otp-page-container">
+    <div class="otp-card">
+        <div class="otp-logo">
+            <img src="{{ url_for('static', filename='images/logo/orya-logo.png') }}" height="55" alt="ORYA">
+        </div>
+        
+        <h2 class="otp-title" data-i18n="verify_email_title">Check your email</h2>
+        <p class="otp-desc">
+            <span data-i18n="verify_email_desc">Please enter the 6-digit verification code we sent to</span> <br>
+            <span class="otp-email-highlight">{{ email }}</span>
+        </p>
+
+        <form id="otp-form">
+            <div class="otp-inputs-wrapper">
+                <input type="number" class="otp-digit-field" maxlength="1" min="0" max="9" required pattern="[0-9]{1}" inputmode="numeric">
+                <input type="number" class="otp-digit-field" maxlength="1" min="0" max="9" required pattern="[0-9]{1}" inputmode="numeric" disabled>
+                <input type="number" class="otp-digit-field" maxlength="1" min="0" max="9" required pattern="[0-9]{1}" inputmode="numeric" disabled>
+                <input type="number" class="otp-digit-field" maxlength="1" min="0" max="9" required pattern="[0-9]{1}" inputmode="numeric" disabled>
+                <input type="number" class="otp-digit-field" maxlength="1" min="0" max="9" required pattern="[0-9]{1}" inputmode="numeric" disabled>
+                <input type="number" class="otp-digit-field" maxlength="1" min="0" max="9" required pattern="[0-9]{1}" inputmode="numeric" disabled>
+            </div>
+
+            <button type="submit" class="otp-submit-btn" id="verify-submit">
+                <span data-i18n="confirm_btn">Confirm</span>
+            </button>
+            
+            <div id="otp-error" class="otp-feedback-msg" style="display: none; color: var(--error, #e74c3c);"></div>
+            <div id="otp-success" class="otp-feedback-msg" style="display: none; color: var(--success, #2ecc71);"></div>
+        </form>
+
+        <div class="otp-timer-container">
+            <span id="timer-prefix" data-i18n="didnt_get_code">Didn't get the email? Resend in</span>
+            <span id="countdown" class="otp-countdown-val">05:00</span>
+            <button id="resend-code-btn" class="otp-resend-trigger" style="display: none;" data-i18n="resend_code">Resend Code</button>
+        </div>
+
+        <a href="/register" class="otp-back-nav">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span data-i18n="back_to_register">back</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const inputs = document.querySelectorAll('.otp-inputs-wrapper input');
+    const form = document.getElementById('otp-form');
+    const errorDiv = document.getElementById('otp-error');
+    const successDiv = document.getElementById('otp-success');
+    const submitBtn = document.getElementById('verify-submit');
+    const countdownSpan = document.getElementById('countdown');
+    const timerPrefix = document.getElementById('timer-prefix');
+    const resendBtn = document.getElementById('resend-code-btn');
+
+    // Focus on first input initially
+    inputs[0].focus();
+
+    // ── Input Interactivity: Auto-focus & Navigations ──
+    inputs.forEach((input, index) => {
+        // Enforce input length and focus next
+        input.addEventListener('input', (e) => {
+            const val = e.target.value;
+            if (val.length > 1) {
+                e.target.value = val.slice(0, 1);
+            }
+            
+            if (e.target.value !== "") {
+                if (index < inputs.length - 1) {
+                    inputs[index + 1].removeAttribute('disabled');
+                    inputs[index + 1].focus();
+                }
+            }
+        });
+
+        // Handle key presses (Backspace, Arrow keys)
+        input.addEventListener('keydown', (e) => {
+            if (e.key === "Backspace") {
+                if (input.value === "") {
+                    // Backspace on empty input goes to previous
+                    if (index > 0) {
+                        inputs[index].setAttribute('disabled', true);
+                        inputs[index - 1].focus();
+                        inputs[index - 1].value = "";
+                    }
+                } else {
+                    input.value = "";
+                }
+            } else if (e.key === "ArrowLeft") {
+                if (index > 0) inputs[index - 1].focus();
+            } else if (e.key === "ArrowRight") {
+                if (index < inputs.length - 1 && !inputs[index + 1].disabled) {
+                    inputs[index + 1].focus();
+                }
+            }
+        });
+
+        // Handle pasting whole code
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pasteData = e.clipboardData.getData('text').trim();
+            if (pasteData.length === 6 && /^\d+$/.test(pasteData)) {
+                inputs.forEach((inp, idx) => {
+                    inp.removeAttribute('disabled');
+                    inp.value = pasteData[idx];
+                });
+                inputs[5].focus();
+            }
+        });
+    });
+
+    // ── Countdown Timer (5 minutes) ──
+    let timeRemaining = 300; // 5 minutes in seconds
+    let countdownInterval;
+
+    function startTimer() {
+        clearInterval(countdownInterval);
+        timeRemaining = 300;
+        countdownSpan.style.display = 'inline';
+        timerPrefix.style.display = 'inline';
+        resendBtn.style.display = 'none';
+        
+        // Re-enable verify button and restore standard text
+        submitBtn.removeAttribute('disabled');
+        submitBtn.textContent = document.dir === 'rtl' ? 'تأكيد' : 'Confirm';
+        
+        countdownInterval = setInterval(() => {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            
+            countdownSpan.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeRemaining <= 0) {
+                clearInterval(countdownInterval);
+                countdownSpan.style.display = 'none';
+                timerPrefix.style.display = 'none';
+                resendBtn.style.display = 'inline-block';
+                
+                // Disable the verify button on timer expiration
+                submitBtn.setAttribute('disabled', true);
+                submitBtn.textContent = document.dir === 'rtl' ? 'انتهت صلاحية الرمز' : 'Code Expired';
+            }
+            timeRemaining--;
+        }, 1000);
+    }
+
+    startTimer();
+
+    // ── Resend Code Logic ──
+    resendBtn.addEventListener('click', async () => {
+        errorDiv.style.display = 'none';
+        successDiv.style.display = 'none';
+        resendBtn.style.display = 'none';
+        
+        try {
+            const res = await fetch('/resend-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await res.json();
+            if (res.ok) {
+                successDiv.textContent = data.message;
+                successDiv.style.display = 'block';
+                // Reset inputs
+                inputs.forEach((inp, idx) => {
+                    inp.value = "";
+                    if (idx > 0) inp.setAttribute('disabled', true);
+                });
+                inputs[0].focus();
+                // Restart timer
+                startTimer();
+            } else {
+                errorDiv.textContent = data.message;
+                errorDiv.style.display = 'block';
+                resendBtn.style.display = 'inline-block';
+            }
+        } catch (err) {
+            errorDiv.textContent = 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
+            errorDiv.style.display = 'block';
+            resendBtn.style.display = 'inline-block';
+        }
+    });
+
+    // ── OTP Submission Verification ──
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorDiv.style.display = 'none';
+        successDiv.style.display = 'none';
+        
+        // Assemble 6-digit OTP
+        let otpCode = "";
+        inputs.forEach(inp => otpCode += inp.value);
+        
+        if (otpCode.length !== 6) {
+            errorDiv.textContent = 'يرجى إدخال رمز التحقق بالكامل';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        
+        submitBtn.setAttribute('disabled', true);
+        submitBtn.textContent = document.dir === 'rtl' ? 'جاري التحقق...' : 'Verifying...';
+        
+        try {
+            const res = await fetch('/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ otp: otpCode })
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                successDiv.textContent = data.message;
+                successDiv.style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = data.redirect || '/';
+                }, 1000);
+            } else {
+                errorDiv.textContent = data.message;
+                errorDiv.style.display = 'block';
+                submitBtn.removeAttribute('disabled');
+                submitBtn.textContent = document.dir === 'rtl' ? 'تأكيد' : 'Confirm';
+            }
+        } catch (err) {
+            errorDiv.textContent = 'حدث خطأ في الاتصال بالسيرفر. يرجى المحاولة مرة أخرى.';
+            errorDiv.style.display = 'block';
+            submitBtn.removeAttribute('disabled');
+            submitBtn.textContent = document.dir === 'rtl' ? 'تأكيد' : 'Confirm';
+        }
+    });
+})();
+</script>
+{% endblock %}

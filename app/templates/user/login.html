@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Login | ORYA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card login-card" id="login-card">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo/orya-logo.png') }}" height="60" alt="ORYA">
+        </div>
+        
+        <h2 data-i18n="login_welcome">Welcome Back</h2>
+
+        <form id="login-form">
+            <div class="form-group">
+                <input type="text" id="username" name="username" class="form-control" data-i18n="username_label" required>
+            </div>
+
+            <div class="form-group">
+                <div class="input-with-icon">
+                    <input type="password" id="password" name="password" class="form-control" data-i18n="password_label" required>
+                    <span class="input-icon-end" id="toggle-password">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </span>
+                </div>
+            </div>
+
+            <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="remember" name="remember">
+                <label for="remember" style="margin: 0; font-weight: 400;" data-i18n="remember_me">Remember me</label>
+            </div>
+
+            <button type="submit" class="btn-gold btn-full" id="login-submit">
+                <span data-i18n="nav_login">Login</span>
+                <div class="spinner" id="login-spinner" style="display: none;"></div>
+            </button>
+            
+            <div id="login-error" class="field-error" style="margin-top: 15px; display: none;"></div>
+        </form>
+
+        <div class="auth-divider">
+            <span data-i18n="or_text">OR</span>
+        </div>
+
+        <div class="auth-footer">
+            <p data-i18n="no_account" style="color: var(--text-muted); font-size: 14px;">Don't have an account?</p>
+            <a href="/register" class="btn-outline btn-full" style="margin-top: 15px; display: block;" data-i18n="nav_register">Create Account</a>
+            
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const loginForm = document.getElementById('login-form');
+    const loginCard = document.getElementById('login-card');
+    const loginError = document.getElementById('login-error');
+    const loginSubmit = document.getElementById('login-submit');
+    const loginSpinner = document.getElementById('login-spinner');
+    const togglePassword = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('password');
+
+    // Password Toggle
+    togglePassword.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // UI Reset
+        loginError.style.display = 'none';
+        loginCard.classList.remove('shake');
+        loginSubmit.disabled = true;
+        loginSpinner.style.display = 'inline-block';
+
+        const formData = new FormData(loginForm);
+        const data = Object.fromEntries(formData.entries());
+        data.remember = formData.get('remember') === 'on';
+
+        try {
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const next = urlParams.get('next') || '/';
+                window.location.href = next;
+            } else {
+                const result = await response.json();
+                throw new Error(result.message || 'Invalid credentials');
+            }
+        } catch (error) {
+            loginError.textContent = error.message;
+            loginError.style.display = 'block';
+            loginCard.classList.add('shake');
+            loginSubmit.disabled = false;
+            loginSpinner.style.display = 'none';
+        }
+    });
+})();
+</script>
+{% endblock %}

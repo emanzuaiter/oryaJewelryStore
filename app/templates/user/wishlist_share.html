@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Shared Wishlist | ORYA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="wishlist-share-page">
+    
+    <div class="share-banner">
+        <div class="container">
+            ORYA Wishlist by {{ owner_username }}
+        </div>
+    </div>
+
+    <div class="container" style="padding-bottom: 60px;">
+        <div class="product-grid">
+            {% for item in wishlist_items %}
+            <article class="product-card">
+                <div class="product-image-wrap">
+                    <a href="/product/{{ item.id }}">
+                        <img src="{{ item.primary_image }}" alt="{{ item.name_ar if session.get('lang', 'ar') == 'ar' else item.name_en }}" class="product-img">
+                    </a>
+                </div>
+                <div class="product-info" style="padding: 15px; text-align: center;">
+                    <h3 class="product-name" 
+                        data-name-ar="{{ item.name_ar }}" 
+                        data-name-en="{{ item.name_en }}"
+                        style="font-size: 15px; margin-bottom: 8px;">
+                        {{ item.name_ar if session.get('lang', 'ar') == 'ar' else item.name_en }}
+                    </h3>
+                    <div class="product-price">
+                        {% set currency_label = 'دينار' if session.get('lang', 'ar') == 'ar' else 'JOD' %}
+                        <span class="price-regular">{{ "{:,.3f}".format(item.price) }} <span data-i18n="price_currency">{{ currency_label }}</span></span>
+                    </div>
+                </div>
+            </article>
+            {% else %}
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <p style="color: #999;">This wishlist has no items.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

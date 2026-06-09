@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="{{ session.get('lang', 'ar') }}" dir="{{ 'rtl' if session.get('lang', 'ar') == 'ar' else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ORYA{% endblock %} | Luxury Jewelry</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon with out back.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/icon with out back.png') }}">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&family=Noto+Serif+Arabic:wght@400;600&family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/typography.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=1">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="no-js">
+    <script>
+        document.body.classList.remove('no-js');
+        window.__ORYA_USER_ID__ = {{ current_user.id if current_user.is_authenticated else 'null' }};
+        window.__ORYA_DELIVERY_FEE__ = parseFloat("{{ site_settings.delivery_fee_jod or '3.0' }}") || 3.0;
+        window.__ORYA_FREE_DELIVERY_RULE__ = "{{ site_settings.free_delivery_rule or 'disabled' }}";
+        window.__ORYA_FREE_DELIVERY_MIN_AMOUNT__ = parseFloat("{{ site_settings.free_delivery_min_amount or '0.0' }}") || 0.0;
+        window.__ORYA_FREE_DELIVERY_MIN_QUANTITY__ = parseInt("{{ site_settings.free_delivery_min_quantity or '0' }}") || 0;
+        window.__ORYA_FREE_DELIVERY_START_DATE__ = "{{ site_settings.free_delivery_start_date or '' }}";
+        window.__ORYA_FREE_DELIVERY_END_DATE__ = "{{ site_settings.free_delivery_end_date or '' }}";
+        window.__ORYA_FREE_DELIVERY_CATEGORY__ = "{{ site_settings.free_delivery_category or '' }}";
+        window.__ORYA_CHATBOT_WELCOME_AR__ = {{ (site_settings.chatbot_welcome_ar or "أهلاً بكِ في أوريا 🌸 كيف يمكنني مساعدتكِ اليوم؟")|tojson }};
+        window.__ORYA_CHATBOT_WELCOME_EN__ = {{ (site_settings.chatbot_welcome_en or "Welcome to ORYA 🌸 How can I help you today?")|tojson }};
+
+        // ── Cart isolation: remove legacy shared cart key ──
+        localStorage.removeItem('orya_cart');
+
+        // If user just logged in (switching from guest), clear guest cart
+        const _prevUser = localStorage.getItem('orya_last_user');
+        const _curUser  = String(window.__ORYA_USER_ID__);
+        if (_prevUser && _prevUser !== _curUser) {
+            // Different user — clear guest cart so it doesn't bleed in
+            localStorage.removeItem('orya_cart_guest');
+        }
+        localStorage.setItem('orya_last_user', _curUser);
+    </script>
+
+    <!-- ANNOUNCEMENT BANNER / PROMO BAR -->
+    {# Priority 1: Active announcement from Announcements Management #}
+    {# Priority 2: promo_free_delivery from Settings (fallback) #}
+    {% set show_banner = False %}
+    {% set banner_bg = '#C9A96E' %}
+    {% set banner_link = None %}
+    {% set banner_ar = '' %}
+    {% set banner_en = '' %}
+
+    {% if announcement and announcement.is_active %}
+        {% set show_banner = True %}
+        {% set banner_ar = announcement.text_ar or '' %}
+        {% set banner_en = announcement.text_en or '' %}
+        {% set banner_bg = announcement.bg_color or '#C9A96E' %}
+        {% set banner_link = announcement.link or None %}
+    {% elif site_settings.promo_free_delivery %}
+        {% set show_banner = True %}
+        {% set banner_ar = site_settings.promo_free_delivery_ar or site_settings.promo_free_delivery %}
+        {% set banner_en = site_settings.promo_free_delivery_en or site_settings.promo_free_delivery %}
+    {% endif %}
+
+    {% if show_banner %}
+    <div class="announcement-banner" id="announcement-bar" style="background-color: {{ banner_bg }};">
+        {% if banner_link %}
+            <a href="{{ banner_link }}" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                <span data-dynamic-ar="{{ banner_ar }}" data-dynamic-en="{{ banner_en }}">
+                    {{ banner_ar if session.get('lang', 'ar') == 'ar' else banner_en }}
+                </span>
+            </a>
+        {% else %}
+            <span data-dynamic-ar="{{ banner_ar }}" data-dynamic-en="{{ banner_en }}">
+                {{ banner_ar if session.get('lang', 'ar') == 'ar' else banner_en }}
+            </span>
+        {% endif %}
+        <button id="dismiss-announce" onclick="dismissAnnouncement()" aria-label="Dismiss">&times;</button>
+    </div>
+    <script>
+        function dismissAnnouncement() {
+            const bar = document.getElementById('announcement-bar');
+            if (bar) {
+                bar.style.display = 'none';
+                sessionStorage.setItem('announcement_dismissed', 'true');
+            }
+        }
+        if (sessionStorage.getItem('announcement_dismissed') === 'true') {
+            const bar = document.getElementById('announcement-bar');
+            if (bar) bar.style.display = 'none';
+        }
+    </script>
+    {% endif %}
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <!-- Logo -->
+            <a href="/" class="nav-brand">
+                <img src="{{ url_for('static', filename='images/logo/orya-logo-transparent.png') }}" alt="ORYA" class="nav-logo">
+            </a>
+
+            <!-- Main Navigation -->
+            <ul class="navbar-categories">
+                <li><a href="/products/all" data-i18n="nav_shop_all">Shop</a></li>
+                <li><a href="/about" data-i18n="about_title">About</a></li>
+                <li><a href="/contact" data-i18n="contact_us">Contact</a></li>
+            </ul>
+
+            <!-- Actions -->
+            <div class="navbar-actions">
+                <!-- Search -->
+                <div class="search-container">
+                    <button class="nav-icon-btn" id="search-toggle" aria-label="Search">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </button>
+                    <div class="search-input-wrapper" id="search-input-wrapper">
+                        <input type="text" id="nav-search-input" data-i18n-placeholder="search_placeholder" placeholder="Search...">
+                        <div class="search-dropdown" id="search-dropdown"></div>
+                    </div>
+                </div>
+
+                <!-- Account -->
+                <div class="account-dropdown" id="account-dropdown">
+                    <button class="nav-icon-btn" aria-label="Account">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <span class="nav-action-text">{% if current_user.is_authenticated %}{{ current_user.full_name }}{% else %}<span data-i18n="nav_login">Login</span>{% endif %}</span>
+                    </button>
+                    <div class="dropdown-menu">
+                        {% if current_user.is_authenticated %}
+                            {% if current_user.role in ['admin', 'super_admin'] %}
+                                <a href="/admin/dashboard" data-i18n="admin_dashboard">لوحة التحكم (Admin)</a>
+                            {% endif %}
+                            <a href="/account" data-i18n="my_account">My Account</a>
+                            <a href="/my-orders" data-i18n="my_orders_title">My Orders</a>
+                            <a href="/logout" data-i18n="admin_logout">Logout</a>
+                        {% else %}
+                            <a href="/login" data-i18n="nav_login">Login</a>
+                            <a href="/register" data-i18n="nav_register">Sign Up</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Wishlist -->
+                <a href="/wishlist" class="nav-icon-btn" aria-label="Wishlist">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                    <span class="nav-action-text" data-i18n="nav_wishlist">Wishlist</span>
+                </a>
+
+                <!-- Cart -->
+                <button class="nav-icon-btn" id="cart-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                    <span class="nav-action-text" data-i18n="nav_cart">Cart</span>
+                    <span class="cart-count-pill" id="cart-count">0</span>
+                </button>
+                
+                <!-- Lang -->
+                <button type="button" class="lang-toggle-btn" id="lang-toggle" onclick="window.toggleLang()">
+                    EN
+                </button>
+
+                <!-- Hamburger (Mobile) -->
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MOBILE MENU (Removed as per user request) -->
+    <!-- <div class="mobile-menu" id="mobile-menu">
+        <a href="/products/all" data-i18n="nav_shop_all">Shop</a>
+        <a href="/about" data-i18n="about_title">About</a>
+        <a href="/contact" data-i18n="contact_us">Contact</a>
+    </div> -->
+
+    <!-- CART DRAWER -->
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-drawer-header">
+            <h3 data-i18n="nav_cart">Cart</h3>
+            <button id="close-cart" style="background:none; border:none; font-size:24px; cursor:pointer;">✕</button>
+        </div>
+        
+        <div class="cart-items" id="cart-items">
+            <!-- Dynamic Content via cart.js -->
+            <div class="empty-cart-state" style="text-align:center; padding:40px 20px;">
+                <p data-i18n="cart_empty">Your cart is empty</p>
+                <a href="/products/all" class="btn-gold" style="margin-top:20px; display:inline-block;" data-i18n="hero_cta">Shop Now</a>
+            </div>
+        </div>
+
+        <div class="cart-footer">
+            <div class="coupon-section">
+                <div class="coupon-row">
+                    <input type="text" id="coupon-input" placeholder="Coupon Code">
+                    <button id="apply-coupon" class="btn-gold" data-i18n="apply_coupon">Apply</button>
+                </div>
+            </div>
+            <div class="cart-totals">
+                <div class="total-row">
+                    <span data-i18n="subtotal">Subtotal</span>
+                    <span id="cart-subtotal">0.00 JOD</span>
+                </div>
+                <div class="total-row" id="discount-row" style="display:none">
+                    <span data-i18n="discount">Discount</span>
+                    <span id="cart-discount">0.00 JOD</span>
+                </div>
+                <div class="total-row">
+                    <span data-i18n="delivery_fee">Delivery Fee</span>
+                    <span id="cart-delivery">0.00 JOD</span>
+                </div>
+                <div class="total-row total-final">
+                    <span data-i18n="total">Total</span>
+                    <span id="cart-total">0.00 JOD</span>
+                </div>
+            </div>
+            <a href="/checkout" class="btn-gold btn-full" data-i18n="checkout_title">Proceed to Checkout</a>
+        </div>
+    </div>
+
+    <!-- QUICK VIEW MODAL -->
+    <div id="quick-view-modal" class="modal">
+        <div class="modal-content luxury-modal">
+            <button id="close-quick-view" class="modal-close">&times;</button>
+            <div id="quick-view-body" class="quick-view-grid">
+                <!-- Content loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <!-- About Us / Our Story -->
+            <div class="footer-col footer-brand">
+                <h4 data-i18n="about_title">Our Story</h4>
+                <p style="font-size:14px; line-height:1.7; margin-bottom: 20px;" data-i18n="footer_about_text">
+                    At ORYA, we are passionate about offering high-quality, handcrafted jewelry that combines timeless elegance with modern style. Our goal is to provide jewelry lovers with a wide range of sophisticated choices, all while ensuring the finest materials and craftsmanship.
+                </p>
+                <div class="social-links">
+                    <a href="#" aria-label="Instagram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+                    <a href="#" aria-label="Facebook"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+                    <a href="#" aria-label="WhatsApp"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-11.7 8.38 8.38 0 0 1 3.8.9L21 3z"></path></svg></a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="footer-col">
+                <h4 data-i18n="nav_sets">Shop Collection</h4>
+                <a href="/products/necklaces" data-i18n="nav_necklaces">Necklaces</a>
+                <a href="/products/earrings" data-i18n="nav_earrings">Earrings</a>
+                <a href="/products/bracelets" data-i18n="nav_bracelets">Bracelets</a>
+                <a href="/products/rings" data-i18n="nav_rings">Rings</a>
+                <a href="/products/all" data-i18n="nav_shop_all">Shop All</a>
+            </div>
+
+            <!-- Contact -->
+            <div class="footer-col">
+                <h4 data-i18n="contact_us">Contact Us</h4>
+                <p style="white-space: nowrap;"><span data-i18n="contact_phone">Phone</span>: <span dir="ltr">{{ site_settings.whatsapp_number }}</span></p>
+                <p style="white-space: nowrap;"><span data-i18n="contact_email">Email</span>: orya.jewelry.store@gmail.com</p>
+                <p style="white-space: nowrap; margin-bottom: 5px;"><span data-i18n="contact_address">Address</span>: <span data-i18n="jordan_amman">Amman, Jordan</span></p>
+                <a href="https://wa.me/{{ site_settings.whatsapp_number|replace('+', '')|replace(' ', '') }}?text={{ ('مرحباً متجر أوريا، أحتاج إلى مساعدة' if session.get('lang', 'ar') == 'ar' else 'Hello ORYA, I need some assistance') | urlencode }}" target="_blank" class="btn-gold" style="display:inline-block; font-size:13px; width: auto; padding: 10px 20px;" data-i18n="whatsapp_contact">Message Us</a>
+            </div>
+
+            <!-- Policies (Added to match Wix) -->
+            <div class="footer-col">
+                <h4 data-i18n="footer_policies">Our Policies</h4>
+                <a href="/privacy" data-i18n="privacy_policy">Privacy Policy</a>
+                <a href="/accessibility" data-i18n="accessibility_statement">Accessibility Statement</a>
+                <a href="/shipping" data-i18n="shipping_policy">Shipping Policy</a>
+                <a href="/terms" data-i18n="terms_conditions">Terms & Conditions</a>
+                <a href="/refund" data-i18n="refund_policy">Refund Policy</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <p>© 2025 by ORYA. Powered and secured by ORYA LUXURY.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="{{ url_for('static', filename='js/i18n.js') }}?v=11"></script>
+    <script src="{{ url_for('static', filename='js/lang.js') }}?v=11"></script>
+    <script src="{{ url_for('static', filename='js/cart.js') }}?v=11"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=11"></script>
+    <script src="{{ url_for('static', filename='js/chatbot.js') }}?v=1"></script>
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,455 @@
+/* ================================================================
+   ORYA - PRODUCTS PAGE STYLES
+   ================================================================ */
+
+.products-page {
+    padding-top: 140px; /* Accounts for fixed floating navbar (20px top + 70px height + 50px breathing room) */
+    padding-bottom: 80px;
+    min-height: 100vh;
+}
+
+/* Page header */
+.grid-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.page-title {
+    font-family: var(--font-heading);
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--charcoal);
+}
+
+.results-count {
+    font-size: 14px;
+    color: var(--charcoal-light, #888);
+}
+
+/* Mobile filter button - hidden on desktop */
+.mobile-filter-btn {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    background: #fff;
+    font-size: 14px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+}
+
+.mobile-filter-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: scale(1.05);
+}
+
+/* ================================================================
+   MAIN LAYOUT: Sidebar + Products Grid
+   ================================================================ */
+
+.products-layout {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: 40px;
+    align-items: start;
+}
+
+/* ================================================================
+   FILTER SIDEBAR
+   ================================================================ */
+
+.filter-overlay {
+    display: none; /* Only shown on mobile */
+}
+
+.filters-sidebar {
+    position: sticky;
+    top: 120px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border);
+}
+
+.sidebar-header-mobile {
+    display: none; /* Hidden on desktop */
+}
+
+.filter-section {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.filter-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 20px;
+}
+
+.filter-title {
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--gold, #b8962e);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-family: var(--font-heading);
+}
+
+/* Sort Dropdown */
+.sort-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    background-color: #fff;
+    color: var(--charcoal);
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.sort-select:focus {
+    border-color: var(--gold);
+}
+
+/* Price Slider */
+.price-slider-container {
+    padding: 5px 0 20px;
+}
+
+.slider-values {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold);
+}
+
+.range-slider {
+    position: relative;
+    height: 4px;
+    background: var(--beige-mid, #e8e0d5);
+    border-radius: 2px;
+}
+
+.slider-track {
+    position: absolute;
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    z-index: 1;
+}
+
+.range-input {
+    position: relative;
+    margin-top: -4px;
+}
+
+.range-input input {
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    top: 0;
+    background: none;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--gold);
+    pointer-events: auto;
+    -webkit-appearance: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: transform 0.2s;
+    position: relative;
+    z-index: 2;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+/* Material Checkboxes */
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: color 0.2s;
+    color: var(--charcoal);
+}
+
+.checkbox-label:hover {
+    color: var(--gold);
+}
+
+.checkbox-label input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    min-width: unset !important;
+    min-height: unset !important;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background-color: #fff;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+    background-color: var(--gold);
+    border-color: var(--gold);
+}
+
+.checkbox-label input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 3.5px;
+    height: 7px;
+    border: solid white;
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-label input[type="checkbox"]:hover {
+    border-color: var(--gold);
+}
+
+/* Reset Button */
+.btn-reset {
+    background: none;
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    width: 100%;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 8px;
+    font-family: var(--font-heading);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--charcoal);
+}
+
+.btn-reset:hover {
+    background-color: var(--bg-soft);
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: scale(1.05);
+}
+
+/* ================================================================
+   PRODUCT GRID AREA
+   ================================================================ */
+
+.grid-container {
+    min-width: 0; /* Prevents grid blowout */
+}
+
+/* The product-grid class already defined in main.css, we override columns here */
+.grid-container .product-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 60px;
+}
+
+.page-link {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--charcoal);
+    font-size: 14px;
+    transition: all 0.2s;
+    border-radius: 50%;
+}
+
+.page-link.active {
+    background-color: var(--gold);
+    color: #fff;
+    border-color: var(--gold);
+}
+
+.page-link:hover:not(.active) {
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: scale(1.1);
+}
+
+.page-link.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    grid-column: 1 / -1;
+    color: var(--charcoal-light, #888);
+}
+
+.empty-state svg {
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+.empty-state h3 {
+    font-family: var(--font-heading);
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+/* ================================================================
+   RESPONSIVE - TABLET
+   ================================================================ */
+
+@media (max-width: 1024px) {
+    .products-layout {
+        grid-template-columns: 190px 1fr;
+        gap: 30px;
+    }
+
+    .grid-container .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ================================================================
+   RESPONSIVE - MOBILE (bottom sheet filter)
+   ================================================================ */
+
+@media (max-width: 768px) {
+    .products-page {
+        padding-top: 110px;
+    }
+
+    .products-layout {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    /* Filter becomes a bottom sheet on mobile */
+    .filter-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+    }
+
+    .filter-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .filters-sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 75vh;
+        border-radius: 24px 24px 0 0;
+        z-index: 1000;
+        transform: translateY(100%);
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto;
+        top: auto;
+        border: none;
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+    }
+
+    .filters-sidebar.active {
+        transform: translateY(0);
+    }
+
+    .sidebar-header-mobile {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .close-filters {
+        background: none;
+        border: none;
+        font-size: 22px;
+        cursor: pointer;
+        color: var(--charcoal);
+        padding: 5px;
+    }
+
+    .mobile-filter-btn {
+        display: flex;
+    }
+
+    .grid-header {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .grid-container .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .grid-container .product-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+}

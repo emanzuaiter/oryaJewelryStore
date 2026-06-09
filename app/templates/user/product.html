@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name_ar if session.get('lang', 'ar') == 'ar' else product.name_en }} | ORYA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/product.css') }}?v=1.2">
+{% endblock %}
+
+{% block content %}
+<div class="product-detail-page">
+    <div class="container">
+        
+        <nav class="breadcrumb" style="margin-bottom: 30px; font-size: 14px;">
+            <a href="/" data-i18n="nav_home">Home</a> / 
+            <a href="/products/{{ product.category }}" data-i18n="nav_{{ product.category|replace('-', '_') }}">{{ product.category|capitalize }}</a> / 
+            <span data-name-ar="{{ product.name_ar }}" data-name-en="{{ product.name_en }}">{{ product.name_ar if session.get('lang', 'ar') == 'ar' else product.name_en }}</span>
+        </nav>
+
+        <div class="product-layout">
+            
+            <!-- LEFT COLUMN: IMAGE GALLERY -->
+            <div class="product-gallery">
+                <div class="main-image-container" id="zoom-container">
+                    {% if product.images and product.images|length > 0 %}
+                        <img src="{{ product.images[0].image_path }}" id="main-image" alt="{{ product.name_en }}">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/placeholder.png') }}" id="main-image" alt="{{ product.name_en }}">
+                    {% endif %}
+                </div>
+                <div class="thumbnail-strip">
+                    {% if product.images and product.images|length > 0 %}
+                        {% for img in product.images[:6] %}
+                        <div class="thumbnail {{ 'active' if loop.first else '' }}" data-src="{{ img.image_path }}">
+                            <img src="{{ img.image_path }}" alt="{{ product.name_en }} thumbnail">
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: PRODUCT INFO -->
+            <div class="product-info-column">
+                <div class="product-main-info">
+                    <span class="material-badge material--{{ product.material|lower|replace(' ', '-') }}" data-i18n="material_{{ product.material|lower|replace(' ', '_') }}">
+                        {{ product.material }}
+                    </span>
+                    
+                    <h1 data-name-ar="{{ product.name_ar }}" 
+                        data-name-en="{{ product.name_en }}">
+                        {{ product.name_ar if session.get('lang', 'ar') == 'ar' else product.name_en }}
+                    </h1>
+
+                    <div class="price-display">
+                        {% set currency_label = 'دينار' if session.get('lang', 'ar') == 'ar' else 'JOD' %}
+                        {% if product.is_on_sale %}
+                            <span class="price-original">{{ "{:,.3f}".format(product.price) }} <span data-i18n="price_currency">{{ currency_label }}</span></span>
+                            <span class="price-sale">{{ "{:,.3f}".format(product.sale_price) }} <span data-i18n="price_currency">{{ currency_label }}</span></span>
+                        {% else %}
+                            <span class="price-regular">{{ "{:,.3f}".format(product.price) }} <span data-i18n="price_currency">{{ currency_label }}</span></span>
+                        {% endif %}
+                    </div>
+
+                    <div class="stock-indicator">
+                        {% if product.stock_qty == 0 %}
+                            <div class="stock-out">
+                                <span class="stock-dot"></span>
+                                <span data-i18n="out_of_stock">Out of Stock</span>
+                            </div>
+                        {% elif product.stock_qty <= 5 %}
+                            <div class="stock-low">
+                                <span class="stock-dot"></span>
+                                <span data-i18n="low_stock">Low Stock</span> ({{ product.stock_qty }} <span data-i18n="left_qty">left</span>)
+                            </div>
+                        {% else %}
+                            <div class="stock-in">
+                                <span class="stock-dot"></span>
+                                <span data-i18n="in_stock">In Stock</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Specifications Table -->
+                    {% if product.length_cm or product.size or product.stone_type or product.material %}
+                    <table class="specs-table">
+                        {% if product.length %}
+                        <tr>
+                            <td data-i18n="spec_length">Length</td>
+                            <td>{{ product.length }} <span data-i18n="unit_cm">cm</span></td>
+                        </tr>
+                        {% endif %}
+                        {% if product.size %}
+                        <tr>
+                            <td data-i18n="spec_size">Size</td>
+                            <td>{{ product.size }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if product.stone %}
+                        <tr>
+                            <td data-i18n="spec_stone">Stone</td>
+                            <td>{{ product.stone }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if product.weight %}
+                        <tr>
+                            <td data-i18n="spec_weight">Weight</td>
+                            <td>{{ product.weight }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if product.material %}
+                        <tr>
+                            <td data-i18n="spec_material">Material</td>
+                            <td data-i18n="material_{{ product.material|lower|replace(' ', '_') }}">{{ product.material }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                    {% endif %}
+
+                    <!-- Care Instructions Accordion -->
+                    <div class="accordion">
+                        <div class="accordion-item" id="care-accordion">
+                            <div class="accordion-header">
+                                <span data-i18n="care_instructions_title">Care Instructions</span>
+                                <span>▼</span>
+                            </div>
+                            <div class="accordion-content">
+                                <p>{{ (product.care_ar if session.get('lang', 'ar') == 'ar' else product.care_en) or ('تعاملي بحذر. تجنبي ملامسة العطور والماء.' if session.get('lang', 'ar') == 'ar' else 'Handle with care. Avoid contact with perfumes and water.') }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="purchase-actions">
+                        <div class="qty-selector">
+                            <button class="qty-btn" id="qty-minus" {{ 'disabled' if product.stock_qty == 0 }}>−</button>
+                            <input type="number" id="qty-input" class="qty-input" value="1" min="1" max="{{ product.stock_qty }}" {{ 'disabled' if product.stock_qty == 0 }}>
+                            <button class="qty-btn" id="qty-plus" {{ 'disabled' if product.stock_qty == 0 }}>+</button>
+                        </div>
+                        
+                        <div class="purchase-row">
+                            <button class="btn-add-cart" id="add-to-cart-btn" 
+                                    data-id="{{ product.id }}" 
+                                    {% if product.stock_qty == 0 %}disabled{% endif %}>
+                                <span data-i18n="add_to_cart">Add to Cart</span>
+                            </button>
+    
+                            <button class="wishlist-btn {{ 'active' if is_wishlisted else '' }}" data-id="{{ product.id }}" aria-label="Toggle Wishlist">
+                                <svg class="heart-icon" width="24" height="24" viewBox="0 0 24 24" fill="{{ 'currentColor' if is_wishlisted else 'none' }}" stroke="currentColor" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        {% set wa_message = ('أريد طلب: ' ~ product.name_ar ~ ' - ' ~ ("{:,.3f}".format(product.sale_price if product.is_on_sale else product.price)) ~ ' دينار') if session.get('lang', 'ar') == 'ar' else ('I want to order: ' ~ product.name_en ~ ' - ' ~ ("{:,.3f}".format(product.sale_price if product.is_on_sale else product.price)) ~ ' JOD') %}
+                        <a href="https://wa.me/{{ site_settings.whatsapp_number|replace('+', '')|replace(' ', '') }}?text={{ wa_message|urlencode }}" 
+                           class="btn-whatsapp" target="_blank" rel="noopener">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                            <span data-i18n="whatsapp_order">Order via WhatsApp</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REVIEWS SECTION -->
+        <section class="reviews-section">
+            <div class="section-header">
+                <h2 data-i18n="customer_reviews">Customer Reviews</h2>
+                <div class="divider-gold"></div>
+            </div>
+
+            <div class="reviews-summary">
+                <div class="avg-rating-box">
+                    <div class="avg-num" id="avg-rating-display">{{ "{:.1f}".format(product.avg_rating or 0) }}</div>
+                    <div class="stars" style="margin: 10px 0; color: var(--gold);">
+                        {% for i in range(5) %}
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="{{ 'currentColor' if i < (product.avg_rating|round|int) else 'none' }}" stroke="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                        {% endfor %}
+                    </div>
+                    <div style="font-size: 14px; color: #999;">
+                        (<span id="review-count-total">{{ product.review_count }}</span> <span data-i18n="reviews">reviews</span>)
+                    </div>
+                </div>
+
+                <div class="rating-bars">
+                    {% for i in range(5, 0, -1) %}
+                    {% set count = product.rating_distribution[i|string] if product.rating_distribution else 0 %}
+                    {% set percent = (count / product.review_count * 100) if product.review_count > 0 else 0 %}
+                    <div class="rating-bar-row">
+                        <span style="width: 20px;">{{ i }}★</span>
+                        <div class="bar-bg">
+                            <div class="bar-fill" style="width: {{ percent }}%;"></div>
+                        </div>
+                        <span style="width: 30px; text-align: right;">{{ percent|int }}%</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="write-review-cta">
+                    {% if current_user.is_authenticated %}
+                        <button class="btn-gold" id="btn-show-review-form" data-i18n="write_review">Write a Review</button>
+                    {% else %}
+                        <p style="font-size: 14px;">
+                            <a href="/login?next=/product/{{ product.id }}" style="color: var(--gold); font-weight: 600;" data-i18n="login_to_review">Login to write a review</a>
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Write Review Form -->
+            {% if current_user.is_authenticated %}
+            <div id="review-form-container" class="write-review" style="display: none; margin-bottom: 40px;">
+                <h3 data-i18n="write_review">Write a Review</h3>
+                <div class="star-selector" id="star-selector">
+                    {% for i in range(1, 6) %}
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" data-rating="{{ i }}"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                    {% endfor %}
+                </div>
+                <textarea id="review-text" class="review-textarea" minlength="20" placeholder="Your thoughts..."></textarea>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-gold" id="submit-review" data-i18n="submit_review">Submit</button>
+                    <button class="btn-reset" id="cancel-review" data-i18n="cancel">Cancel</button>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="reviews-list" id="reviews-list">
+                {% for review in reviews %}
+                    {% if review.is_approved %}
+                    <div class="review-card">
+                        <div class="review-header">
+                            <span class="reviewer-name">{{ review.username.split()[0] }}</span>
+                            <span class="review-date">{{ review.date }}</span>
+                            <div class="review-stars">
+                                {% for i in range(5) %}
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="{{ 'currentColor' if i < review.rating else 'none' }}" stroke="var(--gold)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="review-text">{{ review.comment }}</p>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- RECENTLY VIEWED SECTION -->
+        <section class="recently-viewed-section" id="recently-viewed-section">
+            <div class="section-header">
+                <h2 data-i18n="recently_viewed">Recently Viewed</h2>
+                <div class="divider-gold"></div>
+            </div>
+            <div class="scroll-row" id="recently-viewed-container">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.productId = "{{ product.id }}";
+    window.siteWhatsApp = "{{ site_settings.whatsapp_number }}";
+</script>
+<script src="{{ url_for('static', filename='js/product.js') }}?v=1.3"></script>
+{% endblock %}
+

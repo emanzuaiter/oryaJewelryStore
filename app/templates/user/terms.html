@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'الشروط والأحكام' if session.get('lang', 'ar') == 'ar' else 'Terms & Conditions' }} | ORYA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .policy-hero {
+        padding: 80px 0;
+        background: var(--bg-soft);
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+    }
+    .policy-hero h1 {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        color: var(--text-dark);
+        margin: 0;
+    }
+    .policy-body {
+        padding: 60px 0;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .policy-content {
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        line-height: 1.8;
+        color: var(--text-main);
+    }
+    .policy-content h2 {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        color: var(--gold);
+        border-bottom: 1px solid var(--bg-soft);
+        padding-bottom: 10px;
+    }
+    [dir="rtl"] .policy-content {
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="policy-hero">
+    <div class="container">
+        <h1 data-i18n="terms_conditions">Terms & Conditions</h1>
+    </div>
+</section>
+
+<section class="policy-body">
+    <div class="container">
+        <div class="policy-content">
+            {% if session.get('lang', 'ar') == 'ar' %}
+                <h2>الشروط والأحكام</h2>
+                <p>مرحباً بكِ في أوريا. باستخدامكِ لموقعنا، فإنكِ توافقين على الشروط والأحكام التالية:</p>
+                <h3>استخدام الموقع</h3>
+                <p>يُسمح لكِ باستخدام الموقع لأغراض التسوق الشخصي فقط. يُمنع أي استخدام تجاري غير مصرح به للمحتوى.</p>
+                <h3>الطلبات والأسعار</h3>
+                <p>نحن نحتفظ بالحق في قبول أو رفض أي طلب. جميع الأسعار معروضة بالدينار الأردني (JOD).</p>
+                <h3>الملكية الفكرية</h3>
+                <p>جميع التصاميم والصور والشعارات في هذا الموقع هي ملكية خاصة لـ ORYA.</p>
+            {% else %}
+                <h2>Terms & Conditions</h2>
+                <p>Welcome to ORYA. By using our website, you agree to the following terms and conditions:</p>
+                <h3>Use of Website</h3>
+                <p>You are permitted to use the website for personal shopping purposes only. Any unauthorized commercial use of the content is prohibited.</p>
+                <h3>Orders & Pricing</h3>
+                <p>We reserve the right to accept or reject any order. All prices are displayed in Jordanian Dinars (JOD).</p>
+                <h3>Intellectual Property</h3>
+                <p>All designs, images, and logos on this website are the property of ORYA.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

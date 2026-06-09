@@ -1,0 +1,301 @@
+{% extends "admin/base_admin.html" %}
+{% set active = 'admins' %}
+
+{% block title %}<span data-i18n="admin_managers">إدارة المدراء</span> — ORYA Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+  .role-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .role-admin { background: #E3F2FD; color: #1976D2; }
+  .role-super { background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; }
+  
+  /* Modal Styles */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+  .modal.active {
+    display: flex;
+    animation: fadeIn 0.3s ease forwards;
+  }
+  .modal-content {
+    background: white;
+    padding: 35px;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    transform: translateY(30px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .modal.active .modal-content {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { 
+    display: block; 
+    margin-bottom: 8px; 
+    font-weight: 600; 
+    color: var(--admin-text-main);
+    font-size: 14px;
+  }
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background: #F8FAFC;
+    color: var(--admin-text-main);
+  }
+  .form-group select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23C9A96E'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    appearance: none;
+    padding-right: 40px;
+  }
+  [dir="rtl"] .form-group select {
+    background-position: left 12px center;
+    padding-right: 16px;
+    padding-left: 40px;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--gold);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(201, 169, 110, 0.1);
+  }
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 30px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold), #B5955B);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(201, 169, 110, 0.3);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(201, 169, 110, 0.4);
+  }
+  .btn-secondary {
+    background: #F1F5F9;
+    color: #64748B;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .btn-secondary:hover {
+    background: #E2E8F0;
+    color: #475569;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title" data-i18n="admin_managers">إدارة المدراء</h1>
+    <p class="page-subtitle" data-i18n="admin_managers_subtitle">قائمة المسؤولين عن النظام وصلاحياتهم</p>
+  </div>
+  {% if current_user.role == 'super_admin' %}
+  <button class="btn-primary" onclick="openAddModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    <span data-i18n="add_new_admin">إضافة مدير جديد</span>
+  </button>
+  {% endif %}
+</div>
+
+<div class="table-card">
+  <div id="admins-table-wrap">
+    <div class="loading-row"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- Add Admin Modal -->
+<div id="add-modal" class="modal">
+  <div class="modal-content">
+    <h2 style="margin-bottom: 25px; font-family: var(--font-primary); color: var(--admin-text-main);" data-i18n="add_manager">إضافة مدير جديد</h2>
+    <form id="add-admin-form" onsubmit="handleAddAdmin(event)">
+      <div class="form-group">
+        <label data-i18n="table_full_name">الاسم الكامل</label>
+        <input type="text" name="full_name" required placeholder="e.g. Sarah Ahmed">
+      </div>
+      <div class="form-group">
+        <label data-i18n="table_username">اسم المستخدم</label>
+        <input type="text" name="username" required placeholder="sarah_admin">
+      </div>
+      <div class="form-group">
+        <label data-i18n="table_email">البريد الإلكتروني</label>
+        <input type="email" name="email" required placeholder="admin@orya.com">
+      </div>
+      <div class="form-group">
+        <label data-i18n="phone_label">رقم الهاتف</label>
+        <input type="tel" name="phone" required placeholder="07XXXXXXXX">
+      </div>
+      <div class="form-group">
+        <label data-i18n="password_label">كلمة المرور</label>
+        <input type="password" name="password" required placeholder="••••••••">
+      </div>
+      <div class="form-group">
+        <label data-i18n="table_role">الصلاحية</label>
+        <select name="role">
+          <option value="admin" data-i18n="role_admin">مدير (Admin)</option>
+          <option value="super_admin" data-i18n="role_super_admin">مدير عام (Super Admin)</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeAddModal()" data-i18n="cancel">إلغاء</button>
+        <button type="submit" class="btn-primary" data-i18n="add_admin_btn">إضافة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const IS_SUPER = {{ 'true' if current_user.role == 'super_admin' else 'false' }};
+
+async function loadAdmins() {
+  const wrap = document.getElementById('admins-table-wrap');
+  try {
+    const data = await Admin.adminFetch('/admin/api/admins');
+    const admins = data.admins || [];
+
+    wrap.innerHTML = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th data-i18n="table_customer">${t('table_customer')}</th>
+            <th data-i18n="table_email">${t('table_email')}</th>
+            <th data-i18n="table_role">${t('table_role')}</th>
+            <th data-i18n="table_reg_date">${t('table_reg_date')}</th>
+            <th style="text-align: center;" data-i18n="table_actions">${t('table_actions')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${admins.map(a => `
+            <tr>
+              <td>
+                <div style="font-weight: 600;">${a.full_name}</div>
+                <div style="font-size: 12px; color: #888;">@${a.username}</div>
+              </td>
+              <td dir="ltr" style="text-align: right;">${a.email}</td>
+              <td>
+                <span class="role-badge ${a.role === 'super_admin' ? 'role-super' : 'role-admin'}">
+                  ${a.role === 'super_admin' ? t('role_super_admin') : t('role_admin')}
+                </span>
+              </td>
+              <td>${new Date(a.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-JO' : 'en-US')}</td>
+              <td style="text-align: center;">
+                ${IS_SUPER ? `
+                  <button class="btn-icon danger" onclick="deleteAdmin(${a.id}, '${a.username}')" data-i18n-title="table_delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                    </svg>
+                  </button>
+                ` : `<span style="color: #ccc; font-size: 12px;" data-i18n="not_allowed">غير مسموح</span>`}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+  } catch (e) {
+    Admin.showToast(t('error_loading_managers') || 'Failed to load managers', 'error');
+  }
+}
+
+function openAddModal() { 
+  document.getElementById('add-modal').classList.add('active'); 
+}
+function closeAddModal() { 
+  document.getElementById('add-modal').classList.remove('active'); 
+  document.getElementById('add-admin-form').reset();
+}
+
+// Close on escape or clicking outside
+window.addEventListener('click', (e) => {
+  const modal = document.getElementById('add-modal');
+  if (e.target === modal) closeAddModal();
+});
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeAddModal();
+});
+
+async function handleAddAdmin(e) {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const payload = Object.fromEntries(formData.entries());
+
+  try {
+    await Admin.adminFetch('/admin/api/admins', {
+      method: 'POST',
+      body: payload
+    });
+    Admin.showToast(t('admin_added_success') || 'Added successfully', 'success');
+    closeAddModal();
+    loadAdmins();
+  } catch (err) {
+    Admin.showToast(err.message || t('error_adding_manager') || 'Failed to add manager', 'error');
+  }
+}
+
+async function deleteAdmin(id, username) {
+  Admin.showConfirm(`${t('confirm_delete_admin')} (@${username})`, async () => {
+    try {
+      await Admin.adminFetch(`/admin/api/admins/${id}`, { method: 'DELETE' });
+      Admin.showToast(t('admin_deleted_success') || 'Deleted successfully', 'success');
+      loadAdmins();
+    } catch (err) {
+      Admin.showToast(err.message || t('error_deleting_manager') || 'Failed to delete manager', 'error');
+    }
+  }, t('table_actions'), true);
+}
+
+document.addEventListener('DOMContentLoaded', loadAdmins);
+
+// Refresh on language change to update date formats
+window.addEventListener('languageChanged', () => {
+  loadAdmins();
+});
+</script>
+{% endblock %}

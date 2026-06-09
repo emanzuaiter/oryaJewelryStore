@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'سياسة الخصوصية' if session.get('lang', 'ar') == 'ar' else 'Privacy Policy' }} | ORYA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .policy-hero {
+        padding: 80px 0;
+        background: var(--bg-soft);
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+    }
+    .policy-hero h1 {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        color: var(--text-dark);
+        margin: 0;
+    }
+    .policy-body {
+        padding: 60px 0;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .policy-content {
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        line-height: 1.8;
+        color: var(--text-main);
+    }
+    .policy-content h2 {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        color: var(--gold);
+        border-bottom: 1px solid var(--bg-soft);
+        padding-bottom: 10px;
+    }
+    [dir="rtl"] .policy-content {
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="policy-hero">
+    <div class="container">
+        <h1 data-i18n="privacy_policy">Privacy Policy</h1>
+    </div>
+</section>
+
+<section class="policy-body">
+    <div class="container">
+        <div class="policy-content">
+            {% if session.get('lang', 'ar') == 'ar' %}
+                <h2>سياسة الخصوصية</h2>
+                <p>في أوريا، نلتزم بحماية خصوصيتكِ وبياناتكِ الشخصية. توضح هذه السياسة كيف نقوم بجمع واستخدام وحماية معلوماتكِ عند زيارة موقعنا.</p>
+                <h3>جمع المعلومات</h3>
+                <p>نقوم بجمع المعلومات التي تقدمينها لنا عند إنشاء حساب، أو إجراء طلب، أو التواصل معنا. قد يشمل ذلك اسمكِ، وعنوانكِ، ورقم هاتفكِ، وبريدكِ الإلكتروني.</p>
+                <h3>استخدام المعلومات</h3>
+                <p>نستخدم معلوماتكِ لمعالجة طلباتكِ، وتحسين تجربة التسوق، والتواصل معكِ بشأن طلباتكِ أو عروضنا الخاصة.</p>
+                <h3>حماية البيانات</h3>
+                <p>نحن نتخذ إجراءات أمنية صارمة لضمان حماية بياناتكِ من الوصول غير المصرح به.</p>
+            {% else %}
+                <h2>Privacy Policy</h2>
+                <p>At ORYA, we are committed to protecting your privacy and personal data. This policy explains how we collect, use, and protect your information when you visit our website.</p>
+                <h3>Information Collection</h3>
+                <p>We collect information you provide to us when creating an account, placing an order, or contacting us. This may include your name, address, phone number, and email address.</p>
+                <h3>Use of Information</h3>
+                <p>We use your information to process your orders, improve your shopping experience, and communicate with you about your orders or our special offers.</p>
+                <h3>Data Protection</h3>
+                <p>We take strict security measures to ensure your data is protected from unauthorized access.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

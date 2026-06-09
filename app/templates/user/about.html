@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}About Us | ORYA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-hero {
+        padding: 100px 0;
+        background: var(--bg-soft);
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .about-hero h1 {
+        font-family: var(--font-display);
+        font-size: 3.5rem;
+        margin-bottom: 20px;
+        color: var(--text-dark);
+    }
+    .about-hero p {
+        font-size: 1.2rem;
+        color: var(--text-muted);
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    .about-content {
+        padding: 80px 0;
+    }
+    .about-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 60px;
+        align-items: center;
+    }
+    .about-image img {
+        width: 100%;
+        border-radius: 15px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    .about-text h2 {
+        font-family: var(--font-display);
+        font-size: 2.5rem;
+        margin-bottom: 25px;
+    }
+    .about-text p {
+        line-height: 1.8;
+        margin-bottom: 20px;
+        color: var(--text-main);
+    }
+    .values-section {
+        background: #fff;
+        padding: 80px 0;
+    }
+    .values-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        margin-top: 50px;
+    }
+    .value-card {
+        padding: 40px;
+        background: var(--bg-soft);
+        border-radius: 12px;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    .value-card:hover {
+        transform: translateY(-10px);
+    }
+    .value-card h3 {
+        margin-bottom: 15px;
+        font-family: var(--font-display);
+    }
+    @media (max-width: 768px) {
+        .about-grid { grid-template-columns: 1fr; }
+        .values-grid { grid-template-columns: 1fr; }
+        .about-hero h1 { font-size: 2.5rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="about-hero">
+    <div class="container">
+        <h1 data-i18n="about_title">About ORYA</h1>
+        <p dir="auto"
+           data-dynamic-ar="{{ site_settings.hero_tagline_ar or 'اكتشفي تشكيلتنا الحصرية المصنوعة يدوياً' }}"
+           data-dynamic-en="{{ site_settings.hero_tagline_en or 'Discover our exclusive handcrafted collection' }}">
+            {% if session.get('lang', 'ar') == 'ar' %}
+                {{ site_settings.hero_tagline_ar or 'اكتشفي تشكيلتنا الحصرية المصنوعة يدوياً' }}
+            {% else %}
+                {{ site_settings.hero_tagline_en or 'Discover our exclusive handcrafted collection' }}
+            {% endif %}
+        </p>
+    </div>
+</section>
+
+<section class="about-content">
+    <div class="container">
+        <div class="about-grid">
+            <div class="about-image">
+                <img src="{{ url_for('static', filename='images/logo/orya-logo.png') }}" alt="ORYA Jewelry">
+            </div>
+            <div class="about-text">
+                <div style="font-size: 1.1rem; line-height: 1.8; color: var(--text-main); margin-top: 15px;" dir="auto"
+                     data-dynamic-ar="{{ (site_settings.about_ar or 'مجوهرات أوريا هي علامة تجارية فاخرة تقدم أرقى وأجمل التصاميم المصنوعة يدوياً بحرفية عالية لتناسب ذوقك الرفيع.') | forceescape }}"
+                     data-dynamic-en="{{ (site_settings.about_en or 'ORYA Jewelry is a luxury brand offering the finest handcrafted designs created with high craftsmanship to suit your refined taste.') | forceescape }}">
+                    {% if session.get('lang', 'ar') == 'ar' %}
+                        {{ (site_settings.about_ar or 'مجوهرات أوريا هي علامة تجارية فاخرة تقدم أرقى وأجمل التصاميم المصنوعة يدوياً بحرفية عالية لتناسب ذوقك الرفيع.')|replace('\n', '<br>')|safe }}
+                    {% else %}
+                        {{ (site_settings.about_en or 'ORYA Jewelry is a luxury brand offering the finest handcrafted designs created with high craftsmanship to suit your refined taste.')|replace('\n', '<br>')|safe }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="values-section">
+    <div class="container">
+        <div style="text-align: center;">
+            <h2 data-i18n="why_choose_us">Why Choose Us</h2>
+            <p data-i18n="commitment_text">Our Commitment</p>
+        </div>
+        <div class="values-grid">
+            <div class="value-card">
+                <h3 data-i18n="usp_quality">Quality Craftsmanship</h3>
+                <p data-i18n="usp_quality_desc">Every piece is handcrafted with precision.</p>
+            </div>
+            <div class="value-card">
+                <h3 data-i18n="usp_style">Stylish Designs</h3>
+                <p data-i18n="usp_style_desc">Modern aesthetics meets timeless luxury.</p>
+            </div>
+            <div class="value-card">
+                <h3 data-i18n="usp_materials">Premium Materials</h3>
+                <p data-i18n="usp_materials_desc">Only the finest gold and stones are used.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

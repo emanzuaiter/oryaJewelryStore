@@ -1,0 +1,40 @@
+{% macro render_product_card(product, user_wishlist=[]) %}
+<article class="product-card reveal">
+    <div class="product-image-wrap">
+        <a href="/product/{{ product.id }}">
+            <img 
+                src="{{ product.primary_image }}" 
+                data-hover="{{ product.secondary_image or product.primary_image }}" 
+                alt="{{ product.name_en }}" 
+                loading="lazy" 
+                class="product-img"
+            >
+        </a>
+        <button 
+            class="wishlist-btn {{ 'active' if product.id in user_wishlist else '' }}" 
+            data-id="{{ product.id }}" 
+            aria-label="Add to wishlist"
+        >
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        </button>
+        <button class="quick-view-btn" data-id="{{ product.id }}" data-i18n="quick_view">Quick View</button>
+    </div>
+
+    <div class="product-info">
+        <h3 class="product-name" 
+            data-name-ar="{{ product.name_ar }}" 
+            data-name-en="{{ product.name_en }}">
+            {{ product.name_ar if session.get('lang', 'ar') == 'ar' else product.name_en }}
+        </h3>
+        <div class="product-price">
+            {% set currency_label = 'دينار' if session.get('lang', 'ar') == 'ar' else 'JOD' %}
+            {% if product.is_on_sale %}
+                <span class="price-sale">{{ "{:,.3f}".format(product.sale_price) }} <span data-i18n="price_currency">{{ currency_label }}</span></span>
+                <span class="price-original">{{ "{:,.3f}".format(product.price) }} <span data-i18n="price_currency">{{ currency_label }}</span></span>
+            {% else %}
+                <span class="price-regular">{{ "{:,.3f}".format(product.price) }} <span data-i18n="price_currency">{{ currency_label }}</span></span>
+            {% endif %}
+        </div>
+    </div>
+</article>
+{% endmacro %}

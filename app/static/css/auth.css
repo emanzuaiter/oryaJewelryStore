@@ -1,0 +1,408 @@
+/* Auth & Account Styles */
+
+.auth-page {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    background-color: var(--beige-light);
+}
+
+.auth-card {
+    background-color: var(--white-warm);
+    padding: 48px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    width: 100%;
+    text-align: center;
+}
+
+.login-card { max-width: 420px; }
+.register-card { max-width: 500px; }
+
+.auth-card .logo {
+    margin-bottom: 30px;
+}
+
+.auth-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    margin-bottom: 30px;
+    color: var(--charcoal);
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+    position: relative;
+}
+
+html[dir="rtl"] .form-group { text-align: right; }
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    border-color: var(--gold);
+}
+
+.input-with-icon {
+    position: relative;
+}
+
+.input-icon-end {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #999;
+    display: flex;
+    align-items: center;
+}
+
+html[dir="rtl"] .input-icon-end {
+    right: auto;
+    left: 12px;
+}
+
+/* Password Strength */
+.strength-meter {
+    height: 4px;
+    background-color: var(--border);
+    margin-top: 8px;
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+}
+
+.strength-bar {
+    height: 100%;
+    transition: width 0.3s, background-color 0.3s;
+    width: 0;
+}
+
+.strength-weak { background-color: #e74c3c; width: 25%; }
+.strength-fair { background-color: #e67e22; width: 50%; }
+.strength-good { background-color: #f1c40f; width: 75%; }
+.strength-strong { background-color: #2ecc71; width: 100%; }
+
+/* Validation Hits */
+.field-hint {
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+}
+
+.field-error { color: #e74c3c; }
+.field-success { color: #2ecc71; }
+
+/* Shake Animation */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Auth Divider */
+.auth-divider {
+    margin: 30px 0;
+    position: relative;
+    text-align: center;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: var(--border);
+    z-index: 1;
+}
+
+.auth-divider span {
+    position: relative;
+    z-index: 2;
+    background-color: var(--white-warm);
+    padding: 0 15px;
+    color: #999;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Auth Footer */
+.auth-footer {
+    margin-top: 20px;
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 12px 25px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.btn-outline:hover {
+    background-color: var(--gold);
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.forgot-link {
+    color: #999;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.forgot-link:hover {
+    color: var(--gold);
+}
+
+/* --- ACCOUNT PAGE --- */
+.account-page {
+    padding: 60px 0;
+}
+
+.account-tabs {
+    display: flex;
+    gap: 30px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+}
+
+.tab-btn {
+    padding: 15px 0;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--charcoal-light);
+    cursor: pointer;
+    position: relative;
+}
+
+.tab-btn.active {
+    color: var(--gold);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--gold);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Orders Table */
+.orders-table-container {
+    overflow-x: auto;
+}
+
+.orders-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.orders-table th {
+    text-align: left;
+    padding: 15px;
+    background-color: var(--beige-light);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+html[dir="rtl"] .orders-table th { text-align: right; }
+
+.orders-table td {
+    padding: 15px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-pending { background: #FFF3CD; color: #856404; }
+.status-pending_verification { background: #E0E7FF; color: #3730A3; }
+.status-confirmed { background: #D4EDDA; color: #155724; }
+.status-processing { background: #CCE5FF; color: #004085; }
+.status-delivered { background: #D4EDDA; color: #155724; }
+.status-cancelled { background: #F8D7DA; color: #721C24; }
+
+/* Expandable Row */
+.order-row { cursor: pointer; transition: background 0.2s; }
+.order-row:hover { background-color: var(--beige-light); }
+
+.order-details-row {
+    display: none;
+    background-color: var(--white-warm);
+}
+
+.order-details-row.active {
+    display: table-row;
+}
+
+.order-details-content {
+    padding: 20px;
+}
+
+.order-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.order-item-mini {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.order-item-mini img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* Order Timeline */
+.order-timeline {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    position: relative;
+}
+
+.order-timeline::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 10%;
+    width: 80%;
+    height: 2px;
+    background-color: var(--border);
+    z-index: 1;
+}
+
+.timeline-step {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+}
+
+.step-dot {
+    width: 32px;
+    height: 32px;
+    background-color: #fff;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.timeline-step.completed .step-dot {
+    background-color: var(--gold);
+    border-color: var(--gold);
+    color: #fff;
+}
+
+.timeline-step.active .step-dot {
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+/* --- WISHLIST PAGE --- */
+.wishlist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-state svg {
+    margin-bottom: 24px;
+    color: var(--border);
+}
+
+/* Wishlist Animations */
+.card-fade-out {
+    animation: cardFadeOut 0.5s ease forwards;
+}
+
+@keyframes cardFadeOut {
+    to { opacity: 0; transform: scale(0.9); }
+}
+
+/* Wishlist Share Banner */
+.share-banner {
+    background-color: var(--gold);
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 40px;
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+}

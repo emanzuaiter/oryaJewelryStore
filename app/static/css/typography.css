@@ -1,0 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&family=Noto+Serif+Arabic:wght@400;600&family=Playfair+Display:wght@400;600;700&display=swap');
+
+/* Default Font Stacks */
+:root {
+    --font-en: 'Playfair Display', serif;
+    --font-ar: 'Noto Serif Arabic', serif;
+}
+
+/* Language-based Font Switching */
+html[lang="en"] body {
+    font-family: var(--font-en);
+}
+
+html[lang="ar"] body {
+    font-family: var(--font-ar);
+}
+
+/* Typographic Defaults */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--charcoal);
+}
+
+p {
+    line-height: 1.6;
+    color: var(--charcoal);
+}
+
+/* Specific weights for better hierarchy */
+.font-light { font-weight: 400; }
+.font-medium { font-weight: 500; }
+.font-bold { font-weight: 600; }
+.font-black { font-weight: 700; }

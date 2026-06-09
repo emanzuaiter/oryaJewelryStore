@@ -1,0 +1,464 @@
+{% extends "admin/base_admin.html" %}
+{% set active = 'products' %}
+
+{% block title %}
+  {% if product %}<span data-i18n="edit_text">تعديل</span>: {{ product.name_ar if session.get('lang') == 'ar' else product.name_en }}{% else %}<span data-i18n="add_new_product">إضافة منتج جديد</span>{% endif %} — ORYA Admin
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">
+      {% if product %}<span data-i18n="edit_text">تعديل</span>: {{ product.name_ar if session.get('lang') == 'ar' else product.name_en }}{% else %}<span data-i18n="add_new_product">إضافة منتج جديد</span>{% endif %}
+    </h1>
+    <p class="page-subtitle">
+      {% if product %}<span data-i18n="edit_product_subtitle">تعديل بيانات المنتج وسجل الصور</span>{% else %}<span data-i18n="new_product_subtitle">إنشاء منتج جديد في المتجر</span>{% endif %}
+    </p>
+  </div>
+  <a href="/admin/products" class="btn btn-outline">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+      <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+    </svg>
+    <span data-i18n="return_to_list">عودة للقائمة</span>
+  </a>
+</div>
+
+<form id="product-form" class="admin-form">
+
+  <!-- SECTION 1 — Basic Info -->
+  <div class="form-section">
+    <h3 class="form-section-title" data-i18n="section_basic_info">1. المعلومات الأساسية</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="name_ar_label">الاسم (عربي)</span> <span class="required">*</span></label>
+        <input type="text" class="form-input" id="name_ar" name="name_ar" required 
+               value="{{ product.name_ar if product else '' }}" data-i18n-placeholder="name_ar_placeholder" placeholder="مثال: طوق نجد الذهبي">
+      </div>
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="name_en_label">الاسم (إنجليزي)</span> <span class="required">*</span></label>
+        <input type="text" class="form-input" id="name_en" name="name_en" required 
+               value="{{ product.name_en if product else '' }}" data-i18n-placeholder="name_en_placeholder" placeholder="e.g. Najd Gold Necklace" dir="ltr">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="category_label">الفئة</span> <span class="required">*</span></label>
+        <select class="form-select" id="category" name="category" required>
+          <option value="" data-i18n="select_category">اختر الفئة...</option>
+          {% for val, lbl in [('necklaces','قلائد'), ('earrings','أقراط'), ('bracelets','أساور'), ('rings','خواتم'), ('belly-rings','بيرسينج بطن'), ('anklets','خلاخيل'), ('sets','أطقم')] %}
+          <option value="{{ val }}" {% if product and product.category == val %}selected{% endif %}>{{ lbl }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="material_title">المادة</span> <span class="required">*</span></label>
+        <select class="form-select" id="material" name="material" required>
+          <option value="" data-i18n="select_material">اختر المادة...</option>
+          {% for val, lbl in [('gold','ذهب'), ('silver','فضة'), ('gold-plated','مطلية بالذهب')] %}
+          <option value="{{ val }}" {% if product and product.material == val %}selected{% endif %}>{{ lbl }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2 — Pricing -->
+  <div class="form-section">
+    <h3 class="form-section-title" data-i18n="section_pricing">2. السعر والتخفيضات</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">السعر (JOD) <span class="required">*</span></label>
+        <input type="number" step="0.001" class="form-input" id="price_jod" name="price_jod" required 
+               value="{{ product.price_jod if product else '' }}" placeholder="0.000">
+      </div>
+      <div class="form-group" id="sale-price-group" style="display: {{ 'block' if product and product.is_on_sale else 'none' }};">
+        <label class="form-label">سعر التخفيض (JOD)</label>
+        <input type="number" step="0.001" class="form-input" id="sale_price_jod" name="sale_price_jod" 
+               value="{{ product.sale_price_jod if product and product.sale_price_jod else '' }}" placeholder="0.000">
+      </div>
+    </div>
+    <div class="toggle-group" style="margin-top: 10px;">
+      <span class="toggle-label" data-i18n="enable_discount">تفعيل التخفيض</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="is_on_sale" name="is_on_sale" onchange="toggleSalePrice()"
+               {% if product and product.is_on_sale %}checked{% endif %}>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- SECTION 3 — Details -->
+  <div class="form-section">
+    <h3 class="form-section-title" data-i18n="section_details">3. تفاصيل المنتج</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" data-i18n="spec_length">الطول / القياس</label>
+        <input type="text" class="form-input" id="length" name="length" 
+               value="{{ product.length if product else '' }}" data-i18n-placeholder="length_placeholder" placeholder="مثال: 45 سم">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="spec_size">المقاس</label>
+        <input type="text" class="form-input" id="size" name="size" 
+               value="{{ product.size if product else '' }}" data-i18n-placeholder="size_placeholder" placeholder="مثال: قابل للتعديل">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" data-i18n="spec_stone">نوع الحجر</label>
+        <input type="text" class="form-input" id="stone" name="stone" 
+               value="{{ product.stone if product else '' }}" data-i18n-placeholder="stone_placeholder" placeholder="مثال: زركون">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="spec_weight">الوزن</label>
+        <input type="text" class="form-input" id="weight" name="weight" 
+               value="{{ product.weight if product else '' }}" data-i18n-placeholder="weight_placeholder" placeholder="مثال: 4.5g">
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4 — Stock & Visibility -->
+  <div class="form-section">
+    <h3 class="form-section-title" data-i18n="section_stock">4. المخزون والظهور</h3>
+    <div class="form-row">
+      <div class="form-group" style="max-width: 250px;">
+        <label class="form-label">الكمية المتوفرة</label>
+        <input type="number" class="form-input" id="stock_qty" name="stock_qty" 
+               value="{{ product.stock_qty if product else 0 }}">
+      </div>
+    </div>
+    <div style="display: flex; gap: 40px; margin-top: 15px;">
+      <div class="toggle-group">
+        <span class="toggle-label" data-i18n="mark_as_new">تمييز كمنتج جديد</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="is_new" name="is_new" {% if product and product.is_new %}checked{% endif %}>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-group">
+        <span class="toggle-label" data-i18n="visible_to_customers">مرئي للعملاء</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="is_visible" name="is_visible" {% if not product or product.is_visible %}checked{% endif %}>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5 — Descriptions -->
+  <div class="form-section">
+    <h3 class="form-section-title" data-i18n="section_descriptions">5. الأوصاف والتعليمات</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">الوصف (عربي)</label>
+        <textarea class="form-textarea" id="description_ar" name="description_ar" rows="5" 
+                  placeholder="اكتبي وصفاً جذاباً للمنتج...">{{ product.description_ar if product else '' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">الوصف (إنجليزي)</label>
+        <textarea class="form-textarea" id="description_en" name="description_en" rows="5" dir="ltr"
+                  placeholder="Write a compelling product description...">{{ product.description_en if product else '' }}</textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">تعليمات العناية (عربي)</label>
+        <textarea class="form-textarea" id="care_ar" name="care_ar" rows="3" 
+                  placeholder="كيفية الحفاظ على لمعان هذا المنتج...">{{ product.care_ar if product else '' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">تعليمات العناية (إنجليزي)</label>
+        <textarea class="form-textarea" id="care_en" name="care_en" rows="3" dir="ltr"
+                  placeholder="How to maintain this product's brilliance...">{{ product.care_en if product else '' }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6 — Images -->
+  <div class="form-section">
+    <h3 class="form-section-title" data-i18n="section_images">6. صور المنتج</h3>
+    
+    <!-- Tab Switcher -->
+    <div class="img-tab-bar" style="display: flex; gap: 10px; margin-bottom: 15px;">
+      <button type="button" class="btn btn-outline img-tab active" id="tab-url" onclick="switchImgTab('url')">
+        🔗 إضافة رابط (URL)
+      </button>
+      <button type="button" class="btn btn-outline img-tab" id="tab-file" onclick="switchImgTab('file')">
+        📁 رفع صورة
+      </button>
+    </div>
+
+    <!-- URL Input Panel -->
+    <div id="panel-url" class="img-panel">
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input type="url" class="form-input" id="url-input" 
+               placeholder="https://..." dir="ltr" style="flex:1;">
+        <button type="button" class="btn btn-gold" onclick="addImageUrl()">إضافة</button>
+      </div>
+      <p style="font-size:12px; color:rgba(0,0,0,0.4); margin-top:8px;">
+        الصق رابط الصورة المباشر
+      </p>
+    </div>
+
+    <!-- File Upload Panel -->
+    <div id="panel-file" class="img-panel" style="display:none;">
+      <div id="drop-zone" class="drop-zone" 
+           onclick="document.getElementById('image-input').click()"
+           ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+          <path d="M12 2v8m0 0l-3-3m3 3l3-3M3 15v4a2 2 0 002 2h14a2 2 0 002-2v-4"/>
+        </svg>
+        <span>اسحبي الصور أو اضغطي للاختيار</span>
+        <p style="font-size: 12px; opacity: 0.6; margin-top: 8px;">يدعم: JPG, PNG, WebP</p>
+      </div>
+      <input type="file" id="image-input" hidden multiple accept="image/*" onchange="onFilesSelected(event)">
+    </div>
+
+    <!-- Thumbnails Grid -->
+    <div id="image-grid" class="image-grid">
+      <!-- Previews will appear here -->
+    </div>
+    <p style="font-size: 12px; color: rgba(0,0,0,0.4); margin-top: 15px;" data-i18n="image_drag_note">
+      ✦ الصورة الأولى (بإطار ذهبي) هي الصورة الرئيسية. يمكنك سحب الصور لإعادة ترتيبها.
+    </p>
+
+    <!-- Hidden field for ordered images -->
+    <input type="hidden" id="ordered-images" name="images">
+  </div>
+
+  <!-- SAVE BUTTON -->
+  <button type="submit" class="btn btn-gold btn-lg btn-full" id="save-btn" style="margin-top: 20px;">
+    {% if product %}<span data-i18n="update_product_btn">تحديث المنتج</span>{% else %}<span data-i18n="save_product_btn">حفظ المنتج الجديد</span>{% endif %}
+  </button>
+
+</form>
+
+<style>
+.drop-zone {
+  border: 2px dashed #D9D3CC;
+  border-radius: 12px;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: rgba(44, 44, 44, 0.5);
+  background: #fbf9f7;
+}
+.drop-zone.active {
+  border-color: var(--gold);
+  background: rgba(201, 169, 110, 0.05);
+  color: var(--gold);
+}
+.image-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+.thumb-wrap {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: move;
+  background: #eee;
+}
+.thumb-wrap.primary {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(201, 169, 110, 0.1);
+}
+.thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.thumb-remove {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 18px;
+  height: 18px;
+  background: var(--error);
+  color: #white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  cursor: pointer;
+  border: 1px solid #fff;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const PRODUCT_ID = {{ product.id if product else 'null' }};
+let imageList = []; // Array of {path: string, is_primary: boolean}
+
+{% if product and product.images %}
+  imageList = {{ product.images|map(attribute='image_path')|list|tojson }}.map((path, idx) => ({
+    path,
+    is_primary: path === "{{ product.primary_image }}"
+  }));
+  if (imageList.length > 0 && !imageList.some(i => i.is_primary)) {
+    imageList[0].is_primary = true;
+  }
+{% endif %}
+
+/* ── TAB SWITCHER ─────────────────────────── */
+function switchImgTab(tab) {
+  document.getElementById('panel-url').style.display  = tab === 'url'  ? 'block' : 'none';
+  document.getElementById('panel-file').style.display = tab === 'file' ? 'block' : 'none';
+  document.getElementById('tab-url').classList.toggle('active',  tab === 'url');
+  document.getElementById('tab-file').classList.toggle('active', tab === 'file');
+}
+
+/* ── URL IMAGE ────────────────────────────── */
+function addImageUrl() {
+  const input = document.getElementById('url-input');
+  const url = input.value.trim();
+  if (!url) { Admin.showToast('الرجاء إدخال رابط صورة', 'error'); return; }
+  if (!url.startsWith('http')) { Admin.showToast('الرابط يجب أن يبدأ بـ http', 'error'); return; }
+  imageList.push({ path: url, is_primary: imageList.length === 0 });
+  input.value = '';
+  renderImages();
+  Admin.showToast('تمت إضافة الصورة', 'success');
+}
+
+/* ── SALE PRICE TOGGLE ───────────────────── */
+function toggleSalePrice() {
+  const isChecked = document.getElementById('is_on_sale').checked;
+  document.getElementById('sale-price-group').style.display = isChecked ? 'block' : 'none';
+}
+
+/* ── FILE UPLOAD ─────────────────────────── */
+const dropZone = document.getElementById('drop-zone');
+function onDragOver(e) { e.preventDefault(); if(dropZone) dropZone.classList.add('active'); }
+function onDragLeave() { if(dropZone) dropZone.classList.remove('active'); }
+function onDrop(e) {
+  e.preventDefault();
+  if(dropZone) dropZone.classList.remove('active');
+  handleFileUploads(e.dataTransfer.files);
+}
+function onFilesSelected(e) { handleFileUploads(e.target.files); }
+
+async function handleFileUploads(files) {
+  for (const file of files) {
+    const fd = new FormData();
+    fd.append('image', file);
+    try {
+      const resp = await Admin.adminFetch('/admin/api/products/upload-image', { method: 'POST', body: fd });
+      imageList.push({ path: resp.path, is_primary: imageList.length === 0 });
+      renderImages();
+    } catch (e) { Admin.showToast(e.message, 'error'); }
+  }
+}
+
+/* ── RENDER THUMBNAILS ───────────────────── */
+function renderImages() {
+  const grid = document.getElementById('image-grid');
+  grid.innerHTML = '';
+
+  imageList.forEach((img, idx) => {
+    const wrap = document.createElement('div');
+    wrap.className = `thumb-wrap ${img.is_primary ? 'primary' : ''}`;
+    wrap.draggable = true;
+    wrap.dataset.index = idx;
+
+    // Full external URL or local path
+    const src = img.path.startsWith('http') ? img.path : '/' + img.path;
+
+    wrap.innerHTML = `
+      <img src="${src}" alt="product image" onerror="this.style.opacity='0.3'">
+      <div class="thumb-remove" onclick="event.stopPropagation(); removeImage(${idx})">✕</div>
+      ${img.is_primary ? '<div class="primary-badge">رئيسية</div>' : ''}
+    `;
+
+    wrap.ondragstart = (e) => { e.dataTransfer.setData('text/plain', idx); wrap.style.opacity = '0.5'; };
+    wrap.ondragend   = ()  => { wrap.style.opacity = '1'; };
+    wrap.ondragover  = (e) => e.preventDefault();
+    wrap.ondrop      = (e) => {
+      e.preventDefault();
+      reorderImages(parseInt(e.dataTransfer.getData('text/plain')), parseInt(wrap.dataset.index));
+    };
+    wrap.onclick = (e) => { if (!e.target.classList.contains('thumb-remove')) setPrimary(idx); };
+
+    grid.appendChild(wrap);
+  });
+}
+
+function removeImage(idx) {
+  const wasPrimary = imageList[idx].is_primary;
+  imageList.splice(idx, 1);
+  if (wasPrimary && imageList.length > 0) imageList[0].is_primary = true;
+  renderImages();
+}
+
+function setPrimary(idx) {
+  imageList.forEach((img, i) => img.is_primary = (i === idx));
+  renderImages();
+}
+
+function reorderImages(from, to) {
+  const item = imageList.splice(from, 1)[0];
+  imageList.splice(to, 0, item);
+  renderImages();
+}
+
+/* ── FORM SUBMIT ─────────────────────────── */
+document.getElementById('product-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('save-btn');
+
+  if (imageList.length === 0) {
+    Admin.showToast('الرجاء إضافة صورة واحدة على الأقل', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'جاري الحفظ...';
+
+  const payload = {
+    name_ar:       document.getElementById('name_ar').value.trim(),
+    name_en:       document.getElementById('name_en').value.trim(),
+    category:      document.getElementById('category').value,
+    material:      document.getElementById('material').value,
+    price_jod:     parseFloat(document.getElementById('price_jod').value),
+    is_on_sale:    document.getElementById('is_on_sale').checked,
+    sale_price_jod:parseFloat(document.getElementById('sale_price_jod').value) || null,
+    length:        document.getElementById('length').value.trim(),
+    size:          document.getElementById('size').value.trim(),
+    stone:         document.getElementById('stone').value.trim(),
+    weight:        document.getElementById('weight').value.trim(),
+    stock_qty:     parseInt(document.getElementById('stock_qty').value) || 0,
+    is_new:        document.getElementById('is_new').checked,
+    is_visible:    document.getElementById('is_visible').checked,
+    description_ar:document.getElementById('description_ar').value.trim(),
+    description_en:document.getElementById('description_en').value.trim(),
+    care_ar:       document.getElementById('care_ar').value.trim(),
+    care_en:       document.getElementById('care_en').value.trim(),
+    images:        imageList
+  };
+
+  try {
+    const url = PRODUCT_ID ? `/admin/api/products/${PRODUCT_ID}` : '/admin/api/products';
+    await Admin.adminFetch(url, { method: PRODUCT_ID ? 'PUT' : 'POST', body: payload });
+    Admin.showToast('تم حفظ المنتج بنجاح', 'success');
+    setTimeout(() => location.href = '/admin/products', 1200);
+  } catch (err) {
+    Admin.showToast(err.message || 'خطأ في الحفظ', 'error');
+    btn.disabled = false;
+    btn.textContent = PRODUCT_ID ? t('update_product_btn') : t('save_product_btn');
+  }
+};
+
+// Initial render (for edit mode)
+renderImages();
+</script>
+{% endblock %}
